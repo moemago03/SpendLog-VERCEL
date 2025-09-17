@@ -92,10 +92,29 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         console.log("Ambiente di produzione rilevato. Impostazione del listener Firestore in tempo reale.");
         const docRef = db.collection("users").doc(user);
         const unsubscribe = docRef.onSnapshot(docSnap => {
-            console.log("Dati ricevuti da Firestore.");
-            const rawData = docSnap.exists ? docSnap.data() as UserData : null;
-            setData(processFetchedData(rawData));
-            if (loading) setLoading(false);
+            if (docSnap.exists) {
+                console.log("Dati utente esistenti trovati.");
+                const rawData = docSnap.data() as UserData;
+                setData(processFetchedData(rawData));
+                setLoading(false);
+            } else {
+                // Document doesn't exist, this must be a new user.
+                // Let's create their document to ensure subsequent saves work.
+                console.log("Documento utente non trovato, creazione in corso...");
+                docRef.set(defaultUserData)
+                    .then(() => {
+                        console.log("Documento utente creato. Il listener riceverà i dati aggiornati.");
+                        // The onSnapshot will fire again with the created data.
+                        // setLoading(false) will be called in the next snapshot event.
+                    })
+                    .catch(error => {
+                        console.error("Errore nella creazione del documento utente:", error);
+                        addNotification("Impossibile creare il profilo. Le modifiche non verranno salvate.", 'error');
+                        // Fallback to local data, but saving will likely fail.
+                        setData(defaultUserData);
+                        setLoading(false);
+                    });
+            }
         }, error => {
             console.error("Errore listener Firestore:", error);
             addNotification("Impossibile sincronizzare i dati in tempo reale. Controlla la connessione.", 'error');
