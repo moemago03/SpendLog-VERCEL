@@ -109,7 +109,7 @@ const AppContent: React.FC<{
     return (
         <div className="min-h-screen bg-background text-on-background font-sans">
             <main className="pb-20">
-                 <div key={activeView + activeTripId} className="animate-fade-in">
+                 <div key={activeView + activeTripId}>
                     {renderMainContent()}
                 </div>
             </main>
@@ -124,7 +124,10 @@ const AppContent: React.FC<{
 
 
 const App: React.FC = () => {
-    const [user, setUser] = useState<string | null>(localStorage.getItem('vsc_user'));
+    // --- TEMPORARY CHANGE FOR TESTING ---
+    // Automatically log in as user "0" to bypass the login screen.
+    // Original line: const [user, setUser] = useState<string | null>(localStorage.getItem('vsc_user'));
+    const [user, setUser] = useState<string | null>('0');
     const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
     const [isInstallable, setIsInstallable] = useState(false);
 
@@ -177,7 +180,7 @@ const App: React.FC = () => {
     
     return (
         <ThemeProvider>
-            <DataProvider>
+            <DataProvider user={user}>
                 <CurrencyProvider>
                     <AppContent 
                         onLogout={handleLogout} 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 import { Expense } from '../types';
@@ -14,67 +14,52 @@ interface DashboardProps {
     currentView: 'summary' | 'stats' | 'currency';
 }
 
-const QuickStat: React.FC<{ title: string; value: string; icon: string; onClick?: () => void; }> = ({ title, value, icon, onClick }) => {
-    const commonClasses = "flex-1 p-4 rounded-3xl flex items-center gap-4 bg-surface-variant min-w-[150px] text-left w-full h-full";
-    const content = (
-        <>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-secondary-container/50 text-on-secondary-container">
-                <span className="material-symbols-outlined text-xl">{icon}</span>
-            </div>
-            <div>
-                <p className="text-sm text-on-surface-variant">{title}</p>
-                <p className="text-lg font-bold text-on-surface">{value}</p>
-            </div>
-        </>
-    );
-
-    if (onClick) {
-        return (
-            <button
-                onClick={onClick}
-                className={`${commonClasses} cursor-pointer hover:bg-outline/20 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary`}
-            >
-                {content}
-            </button>
-        );
-    }
-
-    return <div className={commonClasses}>{content}</div>;
+const useOutsideClick = (ref: React.RefObject<HTMLDivElement>, callback: () => void) => {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                callback();
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [ref, callback]);
 };
-
 
 const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     const { data } = useData();
-    const { convert, formatCurrency } = useCurrencyConverter();
+    const { convert } = useCurrencyConverter();
     const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
     const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
     
-    const [dateFilter, setDateFilter] = useState('all');
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedDayForDetail, setSelectedDayForDetail] = useState<string | null>(null);
+    type TimeFilter = 'today' | 'yesterday' | 'last3days';
+    const [timeFilter, setTimeFilter] = useState<TimeFilter>('last3days');
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const filterRef = useRef<HTMLDivElement>(null);
+    useOutsideClick(filterRef, () => setIsFilterOpen(false));
 
-    // FIX: Removed useMemo for activeTrip. This was causing a subtle bug where parts of the UI
-    // would not update after adding an expense. By directly finding the trip on each render,
-    // we ensure all components always have the freshest data.
     const activeTrip = data.trips.find(t => t.id === activeTripId);
+
+    const formatCurrencyInteger = (amount: number, currency: string) => {
+        return new Intl.NumberFormat('it-IT', {
+            style: 'currency',
+            currency: currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount);
+    };
 
     const tripDuration = useMemo(() => {
         if (!activeTrip) return 0;
         const start = new Date(activeTrip.startDate);
         const end = new Date(activeTrip.endDate);
-        const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1;
-        return duration;
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        return diffDays;
     }, [activeTrip]);
-    
-    const formatCurrencyRounded = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('it-IT', {
-            style: 'currency',
-            currency: currency,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(amount);
-    };
 
     const stats = useMemo(() => {
         if (!activeTrip || !activeTrip.expenses) return { totalSpent: 0, budget: 0, remaining: 0, dailyAvg: 0 };
@@ -99,15 +84,10 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     
     const sortedExpenses = useMemo(() => {
         if (!activeTrip || !activeTrip.expenses) return [];
-        // Sort by insertion time (ID is a timestamp) in descending order.
-        return [...activeTrip.expenses].sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        return [...activeTrip.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [activeTrip]);
 
     const todaysExpenses = useMemo(() => {
-        // FIX: Timezone bug fix. Instead of creating a local date object,
-        // we get the local date string (e.g., "2023-10-27") and compare it
-        // against the stored ISO date string's prefix. This correctly
-        // identifies "today's" expenses regardless of the user's timezone.
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -133,41 +113,25 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
 
     const filteredExpenses = useMemo(() => {
         let expenses = sortedExpenses;
-        if (selectedDayForDetail) {
-             return expenses.filter(exp => new Date(exp.date).toISOString().split('T')[0] === selectedDayForDetail);
-        }
-        if (dateFilter !== 'all') {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            if (dateFilter === 'today') {
-                expenses = expenses.filter(exp => new Date(exp.date) >= today);
-            } else if (dateFilter === 'week') {
-                const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                expenses = expenses.filter(exp => new Date(exp.date) >= oneWeekAgo);
-            } else if (dateFilter === 'month') {
-                const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-                expenses = expenses.filter(exp => new Date(exp.date) >= oneMonthAgo);
-            }
-        }
-        if (selectedCategories.length > 0) {
-            expenses = expenses.filter(exp => selectedCategories.includes(exp.category));
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (timeFilter === 'today') {
+            expenses = expenses.filter(exp => new Date(exp.date).toDateString() === today.toDateString());
+        } else if (timeFilter === 'yesterday') {
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            expenses = expenses.filter(exp => new Date(exp.date).toDateString() === yesterday.toDateString());
+        } else if (timeFilter === 'last3days') {
+            const threeDaysAgo = new Date(today);
+            threeDaysAgo.setDate(today.getDate() - 2); // Includes today
+            expenses = expenses.filter(exp => {
+                const expDate = new Date(exp.date);
+                return expDate >= threeDaysAgo && expDate <= now;
+            });
         }
         return expenses;
-    }, [sortedExpenses, dateFilter, selectedCategories, selectedDayForDetail]);
-    
-    const isFilterActive = dateFilter !== 'all' || selectedCategories.length > 0 || selectedDayForDetail !== null;
-
-    const clearFilters = () => {
-        setDateFilter('all');
-        setSelectedCategories([]);
-        setSelectedDayForDetail(null);
-    };
-
-    const handleFilterToday = () => {
-        setDateFilter('today');
-        setSelectedCategories([]);
-        setSelectedDayForDetail(null);
-    }
+    }, [sortedExpenses, timeFilter]);
     
     const handleEditExpense = (expense: Expense) => {
         setEditingExpense(expense);
@@ -178,111 +142,167 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         setEditingExpense(undefined);
         setIsExpenseFormOpen(true);
     };
+    
+    const handleFilterChange = (filter: TimeFilter) => {
+        setTimeFilter(filter);
+        setIsFilterOpen(false);
+    };
 
     if (!activeTrip) {
         return <div className="p-8 text-center">Viaggio non trovato o non ancora selezionato.</div>;
     }
-
-    const renderContent = () => {
-        switch (currentView) {
-            case 'summary':
-                const spentPercentage = stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0;
-                const isOverBudget = stats.totalSpent > stats.budget;
-                return (
-                     <div className="space-y-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <QuickStat
-                                title="Spesa di Oggi"
-                                value={formatCurrency(todaysSpend, activeTrip.mainCurrency)}
-                                icon="today"
-                                onClick={handleFilterToday}
-                            />
-                            <QuickStat
-                                title="Budget Oggi"
-                                value={formatCurrency(dailyBudget, activeTrip.mainCurrency)}
-                                icon="track_changes"
-                            />
-                        </div>
-                        
-                        <div className={`p-4 rounded-3xl ${isOverBudget ? 'bg-error/20' : 'bg-surface-variant'}`}>
-                             <div className="flex justify-between items-center text-on-surface mb-2">
-                                <span className="font-bold text-lg">{formatCurrencyRounded(stats.totalSpent, activeTrip.mainCurrency)}</span>
-                                <span className="font-medium text-lg text-on-surface-variant">{formatCurrencyRounded(stats.remaining, activeTrip.mainCurrency)}</span>
-                            </div>
-                            <div className="relative w-full h-2 bg-on-surface/10 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full transition-all duration-500 ease-in-out ${isOverBudget ? 'bg-error' : 'bg-primary'}`}
-                                    style={{ width: `${spentPercentage}%` }}
-                                    role="progressbar"
-                                    aria-valuenow={stats.totalSpent}
-                                    aria-valuemin={0}
-                                    aria-valuemax={stats.budget}
-                                />
-                            </div>
-                        </div>
-
-                        <ExpenseList
-                            expenses={filteredExpenses}
-                            trip={activeTrip}
-                            onEditExpense={handleEditExpense}
-                        />
-                    </div>
-                );
-            case 'currency':
-                 return (
-                    <div className="max-w-2xl mx-auto">
-                        <CurrencyConverter trip={activeTrip} />
-                    </div>
-                );
-            case 'stats':
-                return <Statistics trip={activeTrip} expenses={sortedExpenses} />;
-            default:
-                return null;
-        }
+    
+    const filterLabels: Record<TimeFilter, string> = {
+        today: 'Oggi',
+        yesterday: 'Ieri',
+        last3days: 'Ultimi 3 giorni',
     };
 
-    return (
-        <div>
-            <header className="flex justify-between items-baseline px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-                <h1 className="text-3xl font-bold text-on-surface">{activeTrip.name}</h1>
-                <p className="text-lg font-medium text-on-surface-variant">{tripDuration} G</p>
-            </header>
+    const summaryContent = (() => {
+        const spentPercentage = stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0;
+        const isOverBudget = stats.totalSpent > stats.budget;
+        return (
+            <div className="p-4 space-y-6">
+                <header className="flex justify-between items-start">
+                    <h1 className="text-3xl font-bold text-on-background">{activeTrip.name}</h1>
+                    <div className="text-right">
+                        <div className="flex items-center gap-2 text-on-surface-variant">
+                             <span className="material-symbols-outlined text-lg">date_range</span>
+                             <span className="font-medium">{tripDuration} Giorni</span>
+                        </div>
+                    </div>
+                </header>
+                
+                <div className="grid grid-cols-2 gap-4 bg-surface-variant p-5 rounded-3xl">
+                    {/* Today's Spend */}
+                    <div className="text-center">
+                        <p className="text-sm font-medium text-on-surface-variant">Spesa Oggi</p>
+                        <p className="text-4xl font-bold tracking-tighter text-on-surface mt-1">
+                            {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
+                        </p>
+                    </div>
+                    {/* Daily Budget */}
+                    <div className="text-center border-l border-outline/30">
+                        <p className="text-sm font-medium text-on-surface-variant">Budget Giorno</p>
+                        <p className="text-4xl font-bold tracking-tighter text-on-surface mt-1">
+                            {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
+                        </p>
+                    </div>
+                </div>
 
-            <div className="p-4 sm:p-6 lg:p-8">
-                {renderContent()}
+                {/* Total Budget Progress Bar */}
+                <div className="space-y-3 pt-2">
+                    <div className="flex justify-between items-baseline">
+                        <p className="text-base font-medium text-on-surface">Budget Totale</p>
+                        <p className="text-sm text-on-surface-variant">
+                            {formatCurrencyInteger(stats.totalSpent, activeTrip.mainCurrency)} / {formatCurrencyInteger(stats.budget, activeTrip.mainCurrency)}
+                        </p>
+                    </div>
+                    <div className="w-full bg-surface-variant rounded-full h-2.5">
+                        <div 
+                            className="h-2.5 rounded-full" 
+                            style={{ 
+                                width: `${spentPercentage}%`, 
+                                backgroundColor: isOverBudget ? 'var(--color-error)' : 'var(--color-primary)', 
+                                transition: 'width 0.5s ease-out' 
+                            }}>
+                        </div>
+                    </div>
+                </div>
+                
+                {activeTrip.enableCategoryBudgets && <CategoryBudgetTracker trip={activeTrip} expenses={filteredExpenses} />}
+                
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-on-surface">Spese Recenti</h2>
+                    <div className="relative" ref={filterRef}>
+                        <button
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant py-1.5 px-3 rounded-full hover:bg-surface-variant transition-colors"
+                        >
+                            <span>{filterLabels[timeFilter]}</span>
+                            <span className="material-symbols-outlined text-base">expand_more</span>
+                        </button>
+                        {isFilterOpen && (
+                            <div className="absolute top-full right-0 mt-2 w-48 bg-inverse-surface rounded-xl shadow-lg z-10 p-2 animate-fade-in" style={{ animationDuration: '150ms' }}>
+                                {(Object.keys(filterLabels) as TimeFilter[]).map(key => (
+                                     <button
+                                        key={key}
+                                        onClick={() => handleFilterChange(key)}
+                                        className="w-full text-left p-2 rounded-lg text-inverse-on-surface hover:bg-on-surface/10"
+                                    >
+                                        {filterLabels[key]}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <ExpenseList expenses={filteredExpenses} trip={activeTrip} onEditExpense={handleEditExpense} />
+            </div>
+        );
+    })();
+    
+    const statsContent = (
+        <div className="p-4 space-y-6">
+            <header>
+                <h1 className="text-3xl font-bold text-on-background">Statistiche: {activeTrip.name}</h1>
+            </header>
+            <Statistics trip={activeTrip} expenses={sortedExpenses} />
+        </div>
+    );
+    
+    const currencyContent = (
+        <div className="p-4 space-y-6">
+             <header>
+                <h1 className="text-3xl font-bold text-on-background">Valute: {activeTrip.name}</h1>
+            </header>
+            <CurrencyConverter trip={activeTrip} />
+        </div>
+    );
+    
+    return (
+        <div className="relative min-h-screen">
+            {/* Scrollable content with animation */}
+            <div className="animate-fade-in">
+                {currentView === 'summary' && summaryContent}
+                {currentView === 'stats' && statsContent}
+                {currentView === 'currency' && currencyContent}
+            </div>
+            
+            {/* Fixed Action Buttons */}
+            <div className="fixed bottom-20 right-4 flex flex-col items-center gap-3 z-20">
+                 <button 
+                    onClick={() => setIsAIPanelOpen(true)}
+                    className="h-10 w-10 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                    aria-label="Assistente AI"
+                >
+                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
+                </button>
+                <button 
+                    onClick={handleAddExpense}
+                    className="h-12 w-12 bg-primary text-on-primary rounded-2xl shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                    aria-label="Aggiungi spesa"
+                >
+                    <span className="material-symbols-outlined text-xl">add</span>
+                </button>
             </div>
 
+            {/* Modals */}
             {isExpenseFormOpen && (
-                <ExpenseForm 
-                    trip={activeTrip} 
-                    expense={editingExpense} 
-                    onClose={() => setIsExpenseFormOpen(false)} 
+                <ExpenseForm
+                    trip={activeTrip}
+                    expense={editingExpense}
+                    onClose={() => setIsExpenseFormOpen(false)}
                 />
             )}
             {isAIPanelOpen && (
                 <AIPanel 
                     trip={activeTrip} 
-                    expenses={filteredExpenses}
+                    expenses={sortedExpenses} 
                     onClose={() => setIsAIPanelOpen(false)} 
                 />
             )}
-
-            <div className="fixed bottom-20 right-6 lg:bottom-6 z-40 flex flex-col items-end gap-3">
-                 <button 
-                    onClick={() => setIsAIPanelOpen(true)} 
-                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-secondary" 
-                    aria-label="Apri assistente AI"
-                >
-                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
-                </button>
-                <button 
-                    onClick={handleAddExpense} 
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary" 
-                    aria-label="Aggiungi nuova spesa"
-                >
-                    <span className="material-symbols-outlined text-xl">add</span>
-                </button>
-            </div>
         </div>
     );
 };

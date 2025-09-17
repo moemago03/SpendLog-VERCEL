@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { Trip } from '../types';
 import CategoryManager from './CategoryManager';
@@ -21,16 +20,17 @@ const SettingsItem: React.FC<{
     icon: string;
     onClick?: () => void;
     children?: React.ReactNode;
-}> = ({ label, icon, onClick, children }) => (
+    color?: string;
+}> = ({ label, icon, onClick, children, color = 'text-on-surface' }) => (
     <div 
         onClick={onClick} 
-        className={`flex justify-between items-center p-4 ${onClick ? 'cursor-pointer hover:bg-on-surface/5' : ''}`}
+        className={`flex justify-between items-center p-4 min-h-[64px] ${onClick ? 'cursor-pointer hover:bg-on-surface/5 transition-colors' : ''}`}
     >
         <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-on-surface-variant">{icon}</span>
-            <span className="text-on-surface font-medium">{label}</span>
+            <span className={`material-symbols-outlined ${color === 'text-on-surface' ? 'text-on-surface-variant' : color}`}>{icon}</span>
+            <span className={`${color} font-medium`}>{label}</span>
         </div>
-        {children || <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>}
+        {children ? children : (onClick && <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>)}
     </div>
 );
 
@@ -49,65 +49,77 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
 
     return (
         <>
-            <div className="p-4 sm:p-6 lg:p-8">
-                <header className="py-8">
-                    <h1 className="text-3xl font-bold text-on-background text-center">Profilo</h1>
+            <div className="p-4 pb-24 space-y-8 max-w-2xl mx-auto">
+                <header className="pt-8 pb-4">
+                    <h1 className="text-4xl font-bold text-on-background">Profilo</h1>
                 </header>
-                
-                {sortedTrips.length > 0 && (
-                     <section className="mb-8 max-w-xl mx-auto">
-                        <label htmlFor="trip-select" className="block text-lg font-semibold text-on-surface mb-3 px-2">Viaggio Predefinito</label>
-                        <select
-                            id="trip-select"
-                            value={activeTripId || 'none'}
-                            onChange={(e) => onSetDefaultTrip(e.target.value)}
-                            className="w-full bg-surface-variant border-transparent rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
-                            style={{
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E")`,
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: 'right 1rem center',
-                                backgroundSize: '1em'
-                            }}
-                        >
-                            <option value="none">Nessun viaggio predefinito</option>
-                            {sortedTrips.map(trip => (
-                                <option key={trip.id} value={trip.id}>
-                                    {trip.name}
-                                </option>
-                            ))}
-                        </select>
-                    </section>
-                )}
-                
-                {trips.length === 0 && (
-                     <div className="text-center py-8 px-6 bg-surface-variant/50 rounded-2xl max-w-xl mx-auto my-8">
-                        <span className="material-symbols-outlined text-5xl text-on-surface-variant/50">luggage</span>
-                        <h2 className="text-xl font-semibold text-on-surface-variant mt-4">Nessun viaggio trovato</h2>
-                        <p className="mt-2 text-on-surface-variant">Crea il tuo primo viaggio per iniziare.</p>
-                         <button onClick={() => setIsTripManagerOpen(true)} className="mt-6 px-6 py-2.5 bg-primary text-on-primary font-medium text-sm rounded-full shadow-sm hover:shadow-md">
+
+                {sortedTrips.length === 0 ? (
+                    <div className="text-center py-12 px-6 bg-surface-variant/50 rounded-3xl">
+                        <span className="material-symbols-outlined text-6xl text-on-surface-variant/50">luggage</span>
+                        <h2 className="text-2xl font-semibold text-on-surface mt-4">Nessun viaggio trovato</h2>
+                        <p className="mt-2 text-on-surface-variant max-w-xs mx-auto">Crea il tuo primo viaggio per iniziare a tracciare le tue avventure.</p>
+                        <button onClick={() => setIsTripManagerOpen(true)} className="mt-8 px-8 py-3 bg-primary text-on-primary font-bold rounded-full shadow-md hover:shadow-lg transition-all transform hover:scale-105">
                             Crea un Viaggio
                         </button>
                     </div>
+                ) : (
+                    <section>
+                        <label htmlFor="trip-select" className="block text-sm font-medium text-on-surface-variant mb-2 px-2 uppercase tracking-wider">Viaggio Attivo</label>
+                        <div className="relative">
+                            <select
+                                id="trip-select"
+                                value={activeTripId || 'none'}
+                                onChange={(e) => onSetDefaultTrip(e.target.value)}
+                                className="w-full bg-surface-variant border-2 border-transparent text-on-surface font-semibold text-lg rounded-2xl py-4 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="none">Nessun viaggio predefinito</option>
+                                {sortedTrips.map(trip => (
+                                    <option key={trip.id} value={trip.id}>{trip.name}</option>
+                                ))}
+                            </select>
+                            <span className="material-symbols-outlined text-on-surface-variant absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">unfold_more</span>
+                        </div>
+                    </section>
                 )}
 
-                <main className="max-w-xl mx-auto">
-                     <div className="bg-surface-variant/50 rounded-2xl divide-y divide-outline/30 overflow-hidden">
+                {/* --- Management Section --- */}
+                <section className="space-y-3">
+                    <h2 className="text-sm font-medium text-on-surface-variant px-2 uppercase tracking-wider">Gestione</h2>
+                    <div className="bg-surface rounded-3xl divide-y divide-outline/20 overflow-hidden shadow-sm">
                         <SettingsItem icon="luggage" label="Gestione Viaggi" onClick={() => setIsTripManagerOpen(true)} />
                         <SettingsItem icon="category" label="Gestisci Categorie" onClick={() => setIsCategoryManagerOpen(true)} />
                         {activeTrip && (
                             <SettingsItem icon="star" label="Spese Frequenti" onClick={() => setIsFrequentExpenseManagerOpen(true)} />
                         )}
-                        {isInstallable && (
-                            <SettingsItem icon="download" label="Installa App" onClick={onInstall}>
-                                <></>
-                            </SettingsItem>
-                        )}
-                        <SettingsItem icon="contrast" label="Tema">
+                    </div>
+                </section>
+                
+                {/* --- App Settings Section --- */}
+                <section className="space-y-3">
+                     <h2 className="text-sm font-medium text-on-surface-variant px-2 uppercase tracking-wider">App</h2>
+                    <div className="bg-surface rounded-3xl divide-y divide-outline/20 overflow-hidden shadow-sm">
+                        <SettingsItem icon="contrast" label="Tema Scuro">
                             <ThemeToggle />
                         </SettingsItem>
-                        <SettingsItem icon="logout" label="Logout" onClick={onLogout} />
+                        {isInstallable && (
+                            <div className="p-2">
+                                <button onClick={onInstall} className="w-full flex items-center justify-center gap-3 p-3 bg-primary-container text-on-primary-container font-bold rounded-xl hover:opacity-90 transition-opacity">
+                                    <span className="material-symbols-outlined">download</span>
+                                    Installa App
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </main>
+                </section>
+
+                {/* --- Account Section --- */}
+                <section className="space-y-3">
+                     <h2 className="text-sm font-medium text-on-surface-variant px-2 uppercase tracking-wider">Account</h2>
+                    <div className="bg-surface rounded-3xl overflow-hidden shadow-sm">
+                        <SettingsItem icon="logout" label="Logout" onClick={onLogout} color="text-error" />
+                    </div>
+                </section>
             </div>
             
             {isTripManagerOpen && (

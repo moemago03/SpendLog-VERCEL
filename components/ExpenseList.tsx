@@ -95,11 +95,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, trip, onEditExpense
     
     return (
         <div>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-on-surface">
-                    Spese Recenti
-                </h2>
-            </div>
             {expenses.length > 0 ? (
                 <ul className="space-y-3">
                     {expenses.map((expense, index) => (

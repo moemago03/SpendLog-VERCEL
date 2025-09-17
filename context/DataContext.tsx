@@ -22,13 +22,17 @@ const DataContext = createContext<DataContextProps | undefined>(undefined);
 
 const defaultUserData: UserData = { trips: [], categories: DEFAULT_CATEGORIES, defaultTripId: undefined };
 
-export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface DataProviderProps {
+    children: ReactNode;
+    user: string;
+}
+
+export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) => {
     const [data, setData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
-            const user = localStorage.getItem('vsc_user');
             if (!user) {
                 setLoading(false);
                 // This state should not be reachable if app flow is correct
@@ -62,15 +66,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
 
         loadData();
-    }, []);
+    }, [user]);
 
     const saveData = useCallback((newData: UserData) => {
-        const user = localStorage.getItem('vsc_user');
         if (user) {
             setData(newData); // Optimistic update
             saveCloudData(user, newData); // Save to cloud in the background
         }
-    }, []);
+    }, [user]);
 
     const setDefaultTrip = (tripId: string | null) => {
         if (!data) return;
