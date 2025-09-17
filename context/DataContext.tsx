@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode, useContext } from 'react';
 import { UserData, Trip, Expense, Category, CategoryBudget } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
-import { fetchData, saveData as saveCloudData } from '../services/googleSheetService';
+import { fetchData, saveData as saveCloudData } from '../services/dataService';
 import { useNotification } from './NotificationContext';
 
 interface DataContextProps {
@@ -71,7 +71,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
             }
         } catch (error) {
             console.error("Failed to load data", error);
-            addNotification("Impossibile caricare i dati. Riprova più tardi.", 'error');
+            addNotification("Impossibile caricare i dati. Controlla la connessione e riprova.", 'error');
             if (!isRefetch) setData(defaultUserData);
         } finally {
             if (!isRefetch) setLoading(false);
