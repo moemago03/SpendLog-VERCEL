@@ -3,7 +3,7 @@ import { DEFAULT_CATEGORIES } from '../constants';
 import { db } from '../config';
 
 // Detect if the app is running in a local/development environment
-const isDevelopmentEnvironment = (): boolean => {
+export const isDevelopmentEnvironment = (): boolean => {
     const hostname = window.location.hostname;
     const href = window.location.href;
 

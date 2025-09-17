@@ -7,6 +7,7 @@ import ExpenseList from './ExpenseList';
 import CurrencyConverter from './CurrencyConverter';
 import CategoryBudgetTracker from './CategoryBudgetTracker';
 import ExpenseListSkeleton from './ExpenseListSkeleton';
+import FloatingActionButtons from './layout/FloatingActionButtons';
 
 const ExpenseForm = lazy(() => import('./ExpenseForm'));
 const AIPanel = lazy(() => import('./AIPanel'));
@@ -63,7 +64,7 @@ const StatisticsSkeleton = () => (
 const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     const { data, refetchData } = useData();
     const { updateRates } = useCurrency();
-    const { convert } = useCurrencyConverter();
+    const { convert, formatCurrency } = useCurrencyConverter();
     const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
     const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
@@ -93,15 +94,6 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         }).format(amount);
     };
 
-    const tripDuration = useMemo(() => {
-        if (!activeTrip) return 0;
-        const start = new Date(activeTrip.startDate);
-        const end = new Date(activeTrip.endDate);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        return diffDays;
-    }, [activeTrip]);
-
     const stats = useMemo(() => {
         if (!activeTrip || !activeTrip.expenses) return { totalSpent: 0, budget: 0, remaining: 0, dailyAvg: 0 };
         
@@ -127,30 +119,6 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         if (!activeTrip || !activeTrip.expenses) return [];
         return [...activeTrip.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [activeTrip]);
-
-    const todaysExpenses = useMemo(() => {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const todayString = `${year}-${month}-${day}`;
-        
-        return sortedExpenses.filter(exp => exp.date.startsWith(todayString));
-    }, [sortedExpenses]);
-
-    const todaysSpend = useMemo(() => {
-        if (!activeTrip) return 0;
-        return todaysExpenses.reduce((sum, exp) => sum + convert(exp.amount, exp.currency, activeTrip.mainCurrency), 0);
-    }, [todaysExpenses, activeTrip, convert]);
-
-    const dailyBudget = useMemo(() => {
-        if (!activeTrip) return 0;
-        const tripStart = new Date(activeTrip.startDate);
-        const tripEnd = new Date(activeTrip.endDate);
-        const duration = Math.round((tripEnd.getTime() - tripStart.getTime()) / (1000 * 3600 * 24)) + 1;
-        return duration > 0 ? activeTrip.totalBudget / duration : 0;
-    }, [activeTrip]);
-
 
     const filteredExpenses = useMemo(() => {
         let expenses = sortedExpenses;
@@ -273,12 +241,6 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         last3days: 'Ultimi 3 giorni',
     };
 
-    const [integerPart, decimalPart] = new Intl.NumberFormat('it-IT', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(stats.totalSpent).split(',');
-
-
     const summaryContent = (
         <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
             <div
@@ -308,68 +270,81 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                 className="transition-transform"
                 style={{ transform: `translateY(${pullDelta}px)` }}
             >
-                 {/* FIX: Removed redundant and incorrect inline style that caused a TypeScript error. The 'backdrop-blur-xl' class handles this functionality correctly. */}
-                 <div className="pt-12 px-6 pb-6 bg-surface-variant/20 dark:bg-surface/10 backdrop-blur-xl rounded-b-[2.5rem] shadow-sm">
-                    <header className="flex justify-between items-center">
-                        <button className="w-11 h-11 bg-black/5 dark:bg-white/5 rounded-2xl flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10">
-                            <span className="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <h1 className="text-lg font-semibold text-on-surface truncate px-2">{activeTrip.name}</h1>
-                        <button onClick={handleRefresh} className="w-11 h-11 bg-black/5 dark:bg-white/5 rounded-2xl flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10" aria-label="Aggiorna dati">
-                             <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>refresh</span>
-                        </button>
-                    </header>
-                    
-                    <div className="text-center my-10">
-                         <div className="flex justify-center items-baseline gap-2">
-                             <h2 className="text-5xl lg:text-6xl font-bold tracking-tighter text-on-background">
-                                {integerPart}<span className="text-4xl lg:text-5xl opacity-80">,{decimalPart}</span>
-                            </h2>
-                            <span className="text-base font-medium text-on-surface-variant tracking-wider">{activeTrip.mainCurrency}</span>
-                         </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Spesa Oggi</p>
-                            <p className="text-2xl font-bold tracking-tight text-on-surface mt-1">
-                                {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
-                            </p>
+                <div className="p-4">
+                    <style>{`
+                        @keyframes shimmer {
+                            0% { transform: translateX(-100%) rotate(-10deg); }
+                            100% { transform: translateX(100%) rotate(-10deg); }
+                        }
+                        .animate-shimmer {
+                            animation: shimmer 2.5s infinite linear;
+                        }
+                    `}</style>
+                    <div className="relative overflow-hidden rounded-3xl bg-surface p-6 shadow-lg animate-fade-in">
+                        <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer opacity-50 dark:opacity-100"></div>
+
+                        <div className="absolute top-4 left-4 z-10">
+                            <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: activeTrip.color, color: 'var(--trip-on-primary)' }}>
+                                {activeTrip.name}
+                            </span>
                         </div>
-                        <div className="text-center">
-                             <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Budget Giorno</p>
-                            <p className="text-2xl font-bold tracking-tight text-on-surface mt-1">
-                                {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
-                            </p>
+
+                        <div className="relative z-10 flex items-center justify-between mt-10">
+                            <div className="flex-1 pr-4">
+                                <p className="text-sm text-on-surface-variant mb-1">Spesa Totale</p>
+                                <p className="text-5xl font-bold text-on-surface tracking-tighter">
+                                    {formatCurrency(stats.totalSpent, activeTrip.mainCurrency)}
+                                </p>
+                            </div>
+                            
+                            <div className="text-right space-y-3">
+                                <div>
+                                    <p className="text-xs text-on-surface-variant">Rimanente</p>
+                                    <p className={`text-lg font-semibold tracking-tight ${stats.remaining < 0 ? 'text-error' : 'text-on-surface'}`}>
+                                        {formatCurrencyInteger(stats.remaining, activeTrip.mainCurrency)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-on-surface-variant">Media Giorno</p>
+                                    <p className="text-lg font-semibold tracking-tight text-on-surface">
+                                        {formatCurrencyInteger(stats.dailyAvg, activeTrip.mainCurrency)}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
 
                 <div className="p-4 space-y-6">
-                    {/* Total Budget Progress Bar */}
-                    <div className="space-y-3 pt-2">
+                     <div className="bg-surface p-4 rounded-3xl shadow-sm space-y-3">
                         <div className="flex justify-between items-baseline">
                             <p className="text-base font-medium text-on-surface">Budget Totale</p>
-                            <p className="text-sm text-on-surface-variant">
-                                {formatCurrencyInteger(stats.totalSpent, activeTrip.mainCurrency)} / {formatCurrencyInteger(stats.budget, activeTrip.mainCurrency)}
-                            </p>
+                             <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                                <span className="material-symbols-outlined text-base">account_balance_wallet</span>
+                                 <span>
+                                    Rimanente: {formatCurrencyInteger(stats.remaining, activeTrip.mainCurrency)}
+                                </span>
+                             </div>
                         </div>
-                        <div className="w-full bg-surface-variant rounded-full h-2.5">
+                        <div className="w-full bg-surface-variant rounded-full h-4 relative overflow-hidden">
                             <div 
-                                className="h-2.5 rounded-full" 
+                                className="h-full rounded-full transition-all duration-700 ease-out flex items-center justify-end" 
                                 style={{ 
                                     width: `${stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0}%`, 
-                                    backgroundColor: stats.totalSpent > stats.budget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
-                                    transition: 'width 0.5s ease-out, background-color 0.3s ease-out' 
+                                    backgroundImage: `linear-gradient(to right, ${stats.totalSpent > stats.budget ? 'var(--color-error)' : activeTrip.color || 'var(--color-primary)'}, ${stats.totalSpent > stats.budget ? '#ff8a80' : 'var(--color-inverse-primary)'})`,
                                 }}>
+                                    <div className="w-1.5 h-1.5 bg-white/50 rounded-full mr-1.5"></div>
                             </div>
                         </div>
+                         <p className="text-xs text-on-surface-variant text-right">
+                                {formatCurrencyInteger(stats.totalSpent, activeTrip.mainCurrency)} di {formatCurrencyInteger(stats.budget, activeTrip.mainCurrency)}
+                            </p>
                     </div>
                     
                     {activeTrip.enableCategoryBudgets && <CategoryBudgetTracker trip={activeTrip} expenses={filteredExpenses} />}
                     
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center pt-4">
                         <h2 className="text-xl font-bold text-on-surface">Spese Recenti</h2>
                         <div className="relative" ref={filterRef}>
                             <button
@@ -439,30 +414,17 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     );
     
     return (
-        <div className="relative min-h-screen">
-            <div className="relative">
+        <>
+            <div>
                 {currentView === 'summary' && summaryContent}
                 {currentView === 'stats' && statsContent}
                 {currentView === 'currency' && currencyContent}
             </div>
             
-            {/* Fixed Action Buttons */}
-            <div className="fixed bottom-20 right-4 flex flex-col items-center gap-3 z-20">
-                 <button 
-                    onClick={handleAIPanelOpen}
-                    className="h-10 w-10 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center transition-transform active:scale-90"
-                    aria-label="Assistente AI"
-                >
-                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
-                </button>
-                <button 
-                    onClick={handleAddExpense}
-                    className="h-12 w-12 bg-trip-primary text-trip-on-primary rounded-2xl shadow-lg flex items-center justify-center transition-transform active:scale-90"
-                    aria-label="Aggiungi spesa"
-                >
-                    <span className="material-symbols-outlined text-xl">add</span>
-                </button>
-            </div>
+            <FloatingActionButtons 
+                onAddExpense={handleAddExpense} 
+                onAIPanelOpen={handleAIPanelOpen} 
+            />
 
             {/* Modals */}
             {isExpenseFormOpen && (
@@ -483,7 +445,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                     />
                 </Suspense>
             )}
-        </div>
+        </>
     );
 };
 

@@ -1,8 +1,9 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode, useContext } from 'react';
 import { UserData, Trip, Expense, Category, CategoryBudget } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
-import { fetchData, saveData as saveCloudData } from '../services/dataService';
+import { fetchData, saveData as saveCloudData, isDevelopmentEnvironment } from '../services/dataService';
 import { useNotification } from './NotificationContext';
+import { db } from '../config';
 
 interface DataContextProps {
     data: UserData | null;
@@ -41,6 +42,73 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
     const [loading, setLoading] = useState(true);
     const { addNotification } = useNotification();
 
+    const processFetchedData = (fetchedData: UserData | null): UserData => {
+        if (!fetchedData) {
+            return defaultUserData;
+        }
+
+        let processedData = { ...fetchedData };
+
+        if (!processedData.categories || processedData.categories.length === 0) {
+            processedData.categories = DEFAULT_CATEGORIES;
+        }
+        const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
+        const missingDefaults = DEFAULT_CATEGORIES.filter(dc => !processedData.categories.some(uc => uc.id === dc.id));
+        if (missingDefaults.length > 0) {
+            const customCategories = processedData.categories.filter(c => !defaultIds.has(c.id));
+            processedData.categories = [...DEFAULT_CATEGORIES, ...customCategories];
+        }
+
+        return processedData;
+    };
+
+    useEffect(() => {
+        if (!user) {
+            setData(null);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+
+        if (isDevelopmentEnvironment()) {
+            console.warn("Ambiente di sviluppo rilevato. Verranno usati dati di prova locali (senza aggiornamenti in tempo reale).");
+            const loadMockData = async () => {
+                try {
+                    const rawData = await fetchData(user);
+                    setData(processFetchedData(rawData));
+                } catch (error) {
+                    console.error("Failed to load mock data", error);
+                    addNotification("Impossibile caricare i dati di prova.", 'error');
+                    setData(defaultUserData);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadMockData();
+            return;
+        }
+
+        console.log("Ambiente di produzione rilevato. Impostazione del listener Firestore in tempo reale.");
+        const docRef = db.collection("users").doc(user);
+        const unsubscribe = docRef.onSnapshot(docSnap => {
+            console.log("Dati ricevuti da Firestore.");
+            const rawData = docSnap.exists ? docSnap.data() as UserData : null;
+            setData(processFetchedData(rawData));
+            if (loading) setLoading(false);
+        }, error => {
+            console.error("Errore listener Firestore:", error);
+            addNotification("Impossibile sincronizzare i dati in tempo reale. Controlla la connessione.", 'error');
+            setData(defaultUserData);
+            setLoading(false);
+        });
+
+        return () => {
+            console.log("Pulizia del listener Firestore.");
+            unsubscribe();
+        };
+    }, [user, addNotification]);
+
     const loadData = useCallback(async (isRefetch = false) => {
         if (!user) {
             if (!isRefetch) setLoading(false);
@@ -50,22 +118,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
         try {
             let fetchedData = await fetchData(user);
-
-            if (!fetchedData) {
-                fetchedData = defaultUserData;
-            } else {
-                if (!fetchedData.categories || fetchedData.categories.length === 0) {
-                    fetchedData.categories = DEFAULT_CATEGORIES;
-                }
-                const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
-                const missingDefaults = DEFAULT_CATEGORIES.filter(dc => !fetchedData.categories.some(uc => uc.id === dc.id));
-                if (missingDefaults.length > 0) {
-                    const customCategories = fetchedData.categories.filter(c => !defaultIds.has(c.id));
-                    fetchedData.categories = [...DEFAULT_CATEGORIES, ...customCategories];
-                }
-            }
+            setData(processFetchedData(fetchedData));
             
-            setData(fetchedData);
             if (isRefetch) {
                 addNotification('Dati aggiornati con successo!', 'success');
             }
@@ -78,9 +132,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         }
     }, [user, addNotification]);
 
-    useEffect(() => {
-        loadData(false);
-    }, [loadData]);
 
     const refetchData = useCallback(async () => {
         await loadData(true);

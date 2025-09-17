@@ -7,8 +7,8 @@ import NotificationContainer from './components/NotificationContainer';
 import LoginScreen from './components/LoginScreen';
 import Dashboard from './components/Dashboard';
 import ProfileScreen from './components/ProfileScreen';
-import BottomNavBar from './components/BottomNavBar';
 import LoadingScreen from './components/LoadingScreen';
+import MainLayout from './components/layout/MainLayout';
 
 export type AppView = 'summary' | 'stats' | 'currency' | 'profile';
 
@@ -166,18 +166,15 @@ const AppContent: React.FC<{
     };
     
     return (
-        <div className="min-h-screen bg-background text-on-background font-sans">
-            <main className="pb-20 overflow-x-hidden">
-                 <div key={activeView + activeTripId} className={animationClass}>
-                    {renderMainContent()}
-                </div>
-            </main>
-            <BottomNavBar 
-                activeView={activeView}
-                onNavigate={handleNavigation}
-                isTripActive={!!activeTrip}
-            />
-        </div>
+        <MainLayout
+            activeView={activeView}
+            onNavigate={handleNavigation}
+            isTripActive={!!activeTrip}
+        >
+            <div key={activeView + activeTripId} className={animationClass}>
+                {renderMainContent()}
+            </div>
+        </MainLayout>
     );
 });
 
