@@ -113,7 +113,7 @@ const GroupedSpendingList: React.FC<{ data: any[]; currency: string; groupBy: Gr
                 <div className="relative" ref={menuRef}>
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-1 text-lg font-bold text-on-surface hover:bg-surface/50 p-2 rounded-lg">
                         Per {currentLabel}
-                        {/* FIX: Corrected typo from `isMenu-open` to `isMenuOpen` to fix reference and type errors. */}
+                        {/* FIX: Corrected typo from `isMenu-open` to `isMenuOpen`. The hyphen caused a syntax error. */}
                         <span className={`material-symbols-outlined transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>expand_more</span>
                     </button>
                     {isMenuOpen && (

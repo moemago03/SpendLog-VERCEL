@@ -305,114 +305,114 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                 </div>
             </div>
             <div 
-                className="p-4 space-y-6 transition-transform"
+                className="transition-transform"
                 style={{ transform: `translateY(${pullDelta}px)` }}
             >
-                <div className="bg-surface p-5 rounded-[2.5rem] shadow-sm">
-                    <header className="flex justify-between items-center px-1">
-                        <button onClick={handleRefresh} className="w-11 h-11 bg-surface-variant/60 dark:bg-surface rounded-2xl flex items-center justify-center transition-transform active:scale-90" aria-label="Aggiorna dati">
-                            <span className={`material-symbols-outlined text-on-surface-variant ${isRefreshing ? 'animate-spin' : ''}`}>refresh</span>
+                 {/* FIX: Removed redundant and incorrect inline style that caused a TypeScript error. The 'backdrop-blur-xl' class handles this functionality correctly. */}
+                 <div className="pt-12 px-6 pb-6 bg-surface-variant/20 dark:bg-surface/10 backdrop-blur-xl rounded-b-[2.5rem] shadow-sm">
+                    <header className="flex justify-between items-center">
+                        <button className="w-11 h-11 bg-black/5 dark:bg-white/5 rounded-2xl flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10">
+                            <span className="material-symbols-outlined">chevron_left</span>
                         </button>
                         <h1 className="text-lg font-semibold text-on-surface truncate px-2">{activeTrip.name}</h1>
-                        <div className="w-auto h-11 px-3 bg-surface-variant/60 dark:bg-surface rounded-2xl flex items-center justify-center shadow-sm">
-                            <div className="flex items-center gap-1.5 text-on-surface-variant">
-                                 <span className="material-symbols-outlined text-lg">date_range</span>
-                                 <span className="text-sm font-medium">{tripDuration} Giorni</span>
-                            </div>
-                        </div>
-                    </header>
-
-                    <div className="text-center my-6">
-                        <h2 className="text-5xl lg:text-6xl font-bold tracking-tighter text-on-background">
-                            {integerPart}<span className="text-4xl lg:text-5xl opacity-80">,{decimalPart}</span>
-                        </h2>
-                        <p className="text-sm font-semibold text-on-surface-variant mt-1 tracking-widest">{activeTrip.mainCurrency}</p>
-                    </div>
-
-                    <div className="border-t border-outline/10 mt-6 pt-5">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="text-center">
-                                <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Spesa Oggi</p>
-                                <p className="text-xl font-bold tracking-tight text-on-surface mt-1">
-                                    {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
-                                </p>
-                            </div>
-                            <div className="text-center">
-                                 <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Budget Giorno</p>
-                                <p className="text-xl font-bold tracking-tight text-on-surface mt-1">
-                                    {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                {/* Total Budget Progress Bar */}
-                <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-baseline">
-                        <p className="text-base font-medium text-on-surface">Budget Totale</p>
-                        <p className="text-sm text-on-surface-variant">
-                            {formatCurrencyInteger(stats.totalSpent, activeTrip.mainCurrency)} / {formatCurrencyInteger(stats.budget, activeTrip.mainCurrency)}
-                        </p>
-                    </div>
-                    <div className="w-full bg-surface-variant rounded-full h-2.5">
-                        <div 
-                            className="h-2.5 rounded-full" 
-                            style={{ 
-                                width: `${stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0}%`, 
-                                backgroundColor: stats.totalSpent > stats.budget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
-                                transition: 'width 0.5s ease-out, background-color 0.3s ease-out' 
-                            }}>
-                        </div>
-                    </div>
-                </div>
-                
-                {activeTrip.enableCategoryBudgets && <CategoryBudgetTracker trip={activeTrip} expenses={filteredExpenses} />}
-                
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-on-surface">Spese Recenti</h2>
-                    <div className="relative" ref={filterRef}>
-                        <button
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant py-1.5 px-3 rounded-full hover:bg-surface-variant transition-colors"
-                        >
-                            <span>{filterLabels[timeFilter]}</span>
-                            <span className="material-symbols-outlined text-base">expand_more</span>
+                        <button onClick={handleRefresh} className="w-11 h-11 bg-black/5 dark:bg-white/5 rounded-2xl flex items-center justify-center transition-colors hover:bg-black/10 dark:hover:bg-white/10" aria-label="Aggiorna dati">
+                             <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>refresh</span>
                         </button>
-                        {isFilterOpen && (
-                            <div className="absolute top-full right-0 mt-2 w-48 bg-inverse-surface rounded-xl shadow-lg z-10 p-2 animate-fade-in" style={{ animationDuration: '150ms' }}>
-                                {(Object.keys(filterLabels) as TimeFilter[]).map(key => (
-                                     <button
-                                        key={key}
-                                        onClick={() => handleFilterChange(key)}
-                                        className="w-full text-left p-2 rounded-lg text-inverse-on-surface hover:bg-on-surface/10"
-                                    >
-                                        {filterLabels[key]}
-                                    </button>
-                                ))}
+                    </header>
+                    
+                    <div className="text-center my-10">
+                         <div className="flex justify-center items-baseline gap-2">
+                             <h2 className="text-5xl lg:text-6xl font-bold tracking-tighter text-on-background">
+                                {integerPart}<span className="text-4xl lg:text-5xl opacity-80">,{decimalPart}</span>
+                            </h2>
+                            <span className="text-base font-medium text-on-surface-variant tracking-wider">{activeTrip.mainCurrency}</span>
+                         </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                            <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Spesa Oggi</p>
+                            <p className="text-2xl font-bold tracking-tight text-on-surface mt-1">
+                                {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
+                            </p>
+                        </div>
+                        <div className="text-center">
+                             <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Budget Giorno</p>
+                            <p className="text-2xl font-bold tracking-tight text-on-surface mt-1">
+                                {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div className="p-4 space-y-6">
+                    {/* Total Budget Progress Bar */}
+                    <div className="space-y-3 pt-2">
+                        <div className="flex justify-between items-baseline">
+                            <p className="text-base font-medium text-on-surface">Budget Totale</p>
+                            <p className="text-sm text-on-surface-variant">
+                                {formatCurrencyInteger(stats.totalSpent, activeTrip.mainCurrency)} / {formatCurrencyInteger(stats.budget, activeTrip.mainCurrency)}
+                            </p>
+                        </div>
+                        <div className="w-full bg-surface-variant rounded-full h-2.5">
+                            <div 
+                                className="h-2.5 rounded-full" 
+                                style={{ 
+                                    width: `${stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0}%`, 
+                                    backgroundColor: stats.totalSpent > stats.budget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
+                                    transition: 'width 0.5s ease-out, background-color 0.3s ease-out' 
+                                }}>
                             </div>
+                        </div>
+                    </div>
+                    
+                    {activeTrip.enableCategoryBudgets && <CategoryBudgetTracker trip={activeTrip} expenses={filteredExpenses} />}
+                    
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-on-surface">Spese Recenti</h2>
+                        <div className="relative" ref={filterRef}>
+                            <button
+                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                className="flex items-center gap-1.5 text-sm font-medium text-on-surface-variant py-1.5 px-3 rounded-full hover:bg-surface-variant transition-colors"
+                            >
+                                <span>{filterLabels[timeFilter]}</span>
+                                <span className="material-symbols-outlined text-base">expand_more</span>
+                            </button>
+                            {isFilterOpen && (
+                                <div className="absolute top-full right-0 mt-2 w-48 bg-inverse-surface rounded-xl shadow-lg z-10 p-2 animate-fade-in" style={{ animationDuration: '150ms' }}>
+                                    {(Object.keys(filterLabels) as TimeFilter[]).map(key => (
+                                         <button
+                                            key={key}
+                                            onClick={() => handleFilterChange(key)}
+                                            className="w-full text-left p-2 rounded-lg text-inverse-on-surface hover:bg-on-surface/10"
+                                        >
+                                            {filterLabels[key]}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="relative">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/70 pointer-events-none">search</span>
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                            placeholder="Cerca per categoria, importo, valuta..."
+                            className="w-full bg-surface-variant border-2 border-transparent rounded-full py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                    </div>
+                    
+                     <div className="min-h-[250px]">
+                        {isFiltering ? (
+                            <ExpenseListSkeleton />
+                        ) : (
+                            <ExpenseList expenses={filteredExpenses} trip={activeTrip} onEditExpense={handleEditExpense} />
                         )}
                     </div>
-                </div>
-                
-                <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/70 pointer-events-none">search</span>
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        placeholder="Cerca per categoria, importo, valuta..."
-                        className="w-full bg-surface-variant border-2 border-transparent rounded-full py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                </div>
-                
-                 <div className="min-h-[250px]">
-                    {isFiltering ? (
-                        <ExpenseListSkeleton />
-                    ) : (
-                        <ExpenseList expenses={filteredExpenses} trip={activeTrip} onEditExpense={handleEditExpense} />
-                    )}
                 </div>
             </div>
         </div>
