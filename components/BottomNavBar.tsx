@@ -16,7 +16,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onNavigate, isT
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-surface z-30">
+        <nav className="fixed bottom-0 left-0 right-0 h-14 bg-surface z-30">
             <div className="flex h-full w-full">
                 {navItems.map((item) => {
                     const isActive = activeView === item.id;
@@ -34,7 +34,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onNavigate, isT
                             aria-current={isActive ? 'page' : undefined}
                         >
                             <span
-                                className={`material-symbols-outlined text-2xl transition-colors ${
+                                className={`material-symbols-outlined text-xl transition-colors ${
                                     isActive ? 'text-on-surface' : 'text-on-surface-variant'
                                 }`}
                                 style={{
@@ -44,7 +44,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onNavigate, isT
                                 {item.icon}
                             </span>
                             <span
-                                className={`text-xs transition-colors ${
+                                className={`text-[11px] transition-colors ${
                                     isActive
                                         ? 'font-semibold text-on-surface'
                                         : 'text-on-surface-variant'

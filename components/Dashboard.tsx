@@ -267,20 +267,20 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                 />
             )}
 
-            <div className="fixed bottom-24 right-6 lg:bottom-6 z-40 flex flex-col items-end gap-4">
+            <div className="fixed bottom-20 right-6 lg:bottom-6 z-40 flex flex-col items-end gap-3">
                  <button 
                     onClick={() => setIsAIPanelOpen(true)} 
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-secondary" 
+                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-secondary" 
                     aria-label="Apri assistente AI"
                 >
-                    <span className="material-symbols-outlined">auto_awesome</span>
+                    <span className="material-symbols-outlined text-lg">auto_awesome</span>
                 </button>
                 <button 
                     onClick={handleAddExpense} 
-                    className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary" 
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary" 
                     aria-label="Aggiungi nuova spesa"
                 >
-                    <span className="material-symbols-outlined text-3xl">add</span>
+                    <span className="material-symbols-outlined text-xl">add</span>
                 </button>
             </div>
         </div>

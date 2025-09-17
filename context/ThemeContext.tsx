@@ -27,9 +27,16 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.classList.remove(theme === 'dark' ? 'light' : 'dark');
-        root.classList.add(theme);
+        
+        // Save the user's preference to local storage so it persists.
         localStorage.setItem('vsc_theme', theme);
+
+        // Apply the correct class to the root element for Tailwind CSS.
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
     }, [theme]);
 
     const toggleTheme = useCallback(() => {
