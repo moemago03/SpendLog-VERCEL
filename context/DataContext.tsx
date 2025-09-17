@@ -103,9 +103,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
                 console.log("Documento utente non trovato, creazione in corso...");
                 docRef.set(defaultUserData)
                     .then(() => {
-                        console.log("Documento utente creato. Il listener riceverà i dati aggiornati.");
-                        // The onSnapshot will fire again with the created data.
-                        // setLoading(false) will be called in the next snapshot event.
+                        console.log("Documento utente creato con successo.");
+                        // Don't wait for the snapshot to fire again. We have the data.
+                        // The snapshot listener is still active and will take over for subsequent updates.
+                        setData(processFetchedData(defaultUserData));
+                        setLoading(false);
                     })
                     .catch(error => {
                         console.error("Errore nella creazione del documento utente:", error);
