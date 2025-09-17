@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { Trip } from '../types';
 import CategoryManager from './CategoryManager';
@@ -11,6 +12,8 @@ interface ProfileScreenProps {
     activeTripId: string | null;
     onSetDefaultTrip: (tripId: string) => void;
     onLogout: () => void;
+    isInstallable: boolean;
+    onInstall: () => void;
 }
 
 const SettingsItem: React.FC<{
@@ -32,7 +35,7 @@ const SettingsItem: React.FC<{
 );
 
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSetDefaultTrip, onLogout }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSetDefaultTrip, onLogout, isInstallable, onInstall }) => {
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [isFrequentExpenseManagerOpen, setIsFrequentExpenseManagerOpen] = useState(false);
     const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
@@ -93,6 +96,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                         <SettingsItem icon="category" label="Gestisci Categorie" onClick={() => setIsCategoryManagerOpen(true)} />
                         {activeTrip && (
                             <SettingsItem icon="star" label="Spese Frequenti" onClick={() => setIsFrequentExpenseManagerOpen(true)} />
+                        )}
+                        {isInstallable && (
+                            <SettingsItem icon="download" label="Installa App" onClick={onInstall}>
+                                <></>
+                            </SettingsItem>
                         )}
                         <SettingsItem icon="contrast" label="Tema">
                             <ThemeToggle />

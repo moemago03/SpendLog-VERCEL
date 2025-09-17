@@ -12,7 +12,9 @@ export type AppView = 'summary' | 'stats' | 'currency' | 'profile';
 
 const AppContent: React.FC<{
     onLogout: () => void;
-}> = ({ onLogout }) => {
+    isInstallable: boolean;
+    onInstall: () => void;
+}> = ({ onLogout, isInstallable, onInstall }) => {
     const [activeTripId, setActiveTripId] = useState<string | null>(null);
     const [activeView, setActiveView] = useState<AppView>('summary');
     const { data, loading, setDefaultTrip } = useData();
@@ -71,6 +73,8 @@ const AppContent: React.FC<{
                     activeTripId={activeTripId}
                     onSetDefaultTrip={handleSetDefaultTrip}
                     onLogout={onLogout}
+                    isInstallable={isInstallable}
+                    onInstall={onInstall}
                 />
             );
         }
@@ -96,6 +100,8 @@ const AppContent: React.FC<{
                 activeTripId={null}
                 onSetDefaultTrip={handleSetDefaultTrip}
                 onLogout={onLogout}
+                isInstallable={isInstallable}
+                onInstall={onInstall}
             />
         );
     };
@@ -119,6 +125,41 @@ const AppContent: React.FC<{
 
 const App: React.FC = () => {
     const [user, setUser] = useState<string | null>(localStorage.getItem('vsc_user'));
+    const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+    const [isInstallable, setIsInstallable] = useState(false);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e: Event) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            setInstallPrompt(e);
+            // Update UI to show the install button
+            setIsInstallable(true);
+        };
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
+    }, []);
+    
+    const handleInstallClick = async () => {
+        if (!installPrompt) return;
+        
+        // Show the install prompt
+        (installPrompt as any).prompt();
+        
+        // Wait for the user to respond to the prompt
+        const { outcome } = await (installPrompt as any).userChoice;
+        
+        // We've used the prompt, and can't use it again, so clear it
+        setIsInstallable(false);
+        setInstallPrompt(null);
+        
+        console.log(`User response to the install prompt: ${outcome}`);
+    };
 
     const handleLogin = (password: string) => {
         localStorage.setItem('vsc_user', password);
@@ -138,7 +179,11 @@ const App: React.FC = () => {
         <ThemeProvider>
             <DataProvider>
                 <CurrencyProvider>
-                    <AppContent onLogout={handleLogout} />
+                    <AppContent 
+                        onLogout={handleLogout} 
+                        isInstallable={isInstallable}
+                        onInstall={handleInstallClick}
+                    />
                 </CurrencyProvider>
             </DataProvider>
         </ThemeProvider>
