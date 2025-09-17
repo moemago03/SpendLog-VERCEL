@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Trip, Expense } from '../types';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
@@ -17,7 +17,7 @@ const ExpenseItem: React.FC<{
     isSelected: boolean;
     onSelect: () => void;
     style?: React.CSSProperties;
-}> = ({ expense, onEdit, onDelete, categoryIcon, isSelected, onSelect, style }) => {
+}> = React.memo(({ expense, onEdit, onDelete, categoryIcon, isSelected, onSelect, style }) => {
     const { formatCurrency, convert } = useCurrencyConverter();
     const mainCurrency = 'EUR'; // Assuming EUR as the main currency for conversion display
     
@@ -111,22 +111,22 @@ const ExpenseItem: React.FC<{
             </div>
         </li>
     );
-}
+});
 
 const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, trip, onEditExpense }) => {
     const { deleteExpense, data: { categories } } = useData();
     const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null);
 
-    const handleSelectExpense = (expenseId: string) => {
+    const handleSelectExpense = useCallback((expenseId: string) => {
         setSelectedExpenseId(prevId => (prevId === expenseId ? null : expenseId));
-    };
+    }, []);
 
-    const handleDelete = (expenseId: string) => {
+    const handleDelete = useCallback((expenseId: string) => {
         if (window.confirm("Sei sicuro di voler eliminare questa spesa?")) {
             deleteExpense(trip.id, expenseId);
             setSelectedExpenseId(null); // Close the panel after deletion
         }
-    };
+    }, [deleteExpense, trip.id]);
 
     const getCategoryIcon = (categoryName: string) => {
         return categories.find(c => c.name === categoryName)?.icon || '💸';

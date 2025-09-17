@@ -69,4 +69,4 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onNavigate, isT
     );
 };
 
-export default BottomNavBar;
+export default React.memo(BottomNavBar);

@@ -1,10 +1,12 @@
 
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useData } from '../context/DataContext';
-import TripForm from './TripForm';
 import { Trip } from '../types';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
+
+const TripForm = lazy(() => import('./TripForm'));
+
 
 const triggerHapticFeedback = () => {
     if (navigator.vibrate) navigator.vibrate(10);
@@ -171,10 +173,12 @@ const TripManager: React.FC<TripManagerProps> = ({ onClose }) => {
             )}
 
             {isFormOpen && (
-                <TripForm 
-                  trip={editingTrip || undefined}
-                  onClose={() => setIsFormOpen(false)} 
-                />
+                <Suspense fallback={<div/>}>
+                    <TripForm 
+                      trip={editingTrip || undefined}
+                      onClose={() => setIsFormOpen(false)} 
+                    />
+                </Suspense>
             )}
         </div>
     );

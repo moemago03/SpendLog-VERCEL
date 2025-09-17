@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { DataProvider, useData } from './context/DataContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -14,7 +14,7 @@ const AppContent: React.FC<{
     onLogout: () => void;
     isInstallable: boolean;
     onInstall: () => void;
-}> = ({ onLogout, isInstallable, onInstall }) => {
+}> = memo(({ onLogout, isInstallable, onInstall }) => {
     const [activeTripId, setActiveTripId] = useState<string | null>(null);
     const [activeView, setActiveView] = useState<AppView>('summary');
     const { data, loading, setDefaultTrip } = useData();
@@ -77,7 +77,7 @@ const AppContent: React.FC<{
     }, [activeTrip]);
 
 
-    const handleSetDefaultTrip = (tripId: string) => {
+    const handleSetDefaultTrip = useCallback((tripId: string) => {
         const newDefaultTripId = tripId === 'none' ? null : tripId;
         setDefaultTrip(newDefaultTripId);
 
@@ -88,11 +88,11 @@ const AppContent: React.FC<{
             setActiveTripId(tripId);
             setActiveView('summary'); // Switch to summary for the new default trip
         }
-    };
+    }, [setDefaultTrip]);
     
-    const handleNavigation = (view: AppView) => {
+    const handleNavigation = useCallback((view: AppView) => {
         setActiveView(view);
-    };
+    }, []);
 
     if (loading) {
         return <LoadingScreen />;
@@ -153,7 +153,7 @@ const AppContent: React.FC<{
             />
         </div>
     );
-};
+});
 
 
 const App: React.FC = () => {
@@ -181,7 +181,7 @@ const App: React.FC = () => {
         };
     }, []);
     
-    const handleInstallClick = async () => {
+    const handleInstallClick = useCallback(async () => {
         if (!installPrompt) return;
         
         // Show the install prompt
@@ -195,17 +195,17 @@ const App: React.FC = () => {
         setInstallPrompt(null);
         
         console.log(`User response to the install prompt: ${outcome}`);
-    };
+    }, [installPrompt]);
 
     const handleLogin = (password: string) => {
         localStorage.setItem('vsc_user', password);
         setUser(password);
     };
     
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         localStorage.removeItem('vsc_user');
         setUser(null);
-    }
+    }, []);
     
     if (!user) {
         return <LoginScreen onLogin={handleLogin} />;

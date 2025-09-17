@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 import { Expense } from '../types';
-import ExpenseForm from './ExpenseForm';
 import ExpenseList from './ExpenseList';
 import CurrencyConverter from './CurrencyConverter';
 import CategoryBudgetTracker from './CategoryBudgetTracker';
-import AIPanel from './AIPanel';
+
+const ExpenseForm = lazy(() => import('./ExpenseForm'));
+const AIPanel = lazy(() => import('./AIPanel'));
 const Statistics = lazy(() => import('./Statistics'));
 
 interface DashboardProps {
@@ -162,26 +163,26 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         return expenses;
     }, [sortedExpenses, timeFilter]);
     
-    const handleEditExpense = (expense: Expense) => {
+    const handleEditExpense = useCallback((expense: Expense) => {
         setEditingExpense(expense);
         setIsExpenseFormOpen(true);
-    };
+    }, []);
 
-    const handleAddExpense = () => {
+    const handleAddExpense = useCallback(() => {
         triggerHapticFeedback();
         setEditingExpense(undefined);
         setIsExpenseFormOpen(true);
-    };
+    }, []);
     
-    const handleAIPanelOpen = () => {
+    const handleAIPanelOpen = useCallback(() => {
         triggerHapticFeedback();
         setIsAIPanelOpen(true);
-    };
+    }, []);
 
-    const handleFilterChange = (filter: TimeFilter) => {
+    const handleFilterChange = useCallback((filter: TimeFilter) => {
         setTimeFilter(filter);
         setIsFilterOpen(false);
-    };
+    }, []);
 
     if (!activeTrip) {
         return <div className="p-8 text-center">Viaggio non trovato o non ancora selezionato.</div>;
@@ -327,18 +328,22 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
 
             {/* Modals */}
             {isExpenseFormOpen && (
-                <ExpenseForm
-                    trip={activeTrip}
-                    expense={editingExpense}
-                    onClose={() => setIsExpenseFormOpen(false)}
-                />
+                <Suspense fallback={<div />}>
+                    <ExpenseForm
+                        trip={activeTrip}
+                        expense={editingExpense}
+                        onClose={() => setIsExpenseFormOpen(false)}
+                    />
+                </Suspense>
             )}
             {isAIPanelOpen && (
-                <AIPanel 
-                    trip={activeTrip} 
-                    expenses={sortedExpenses} 
-                    onClose={() => setIsAIPanelOpen(false)} 
-                />
+                 <Suspense fallback={<div />}>
+                    <AIPanel 
+                        trip={activeTrip} 
+                        expenses={sortedExpenses} 
+                        onClose={() => setIsAIPanelOpen(false)} 
+                    />
+                </Suspense>
             )}
         </div>
     );

@@ -1,10 +1,12 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { Trip } from '../types';
-import CategoryManager from './CategoryManager';
-import FrequentExpenseManager from './FrequentExpenseManager';
 import ThemeToggle from './ThemeToggle';
-import TripManager from './TripManager';
+
+const CategoryManager = lazy(() => import('./CategoryManager'));
+const FrequentExpenseManager = lazy(() => import('./FrequentExpenseManager'));
+const TripManager = lazy(() => import('./TripManager'));
+
 
 interface ProfileScreenProps {
     trips: Trip[];
@@ -123,16 +125,22 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
             </div>
             
             {isTripManagerOpen && (
-                <TripManager onClose={() => setIsTripManagerOpen(false)} />
+                <Suspense fallback={<div/>}>
+                    <TripManager onClose={() => setIsTripManagerOpen(false)} />
+                </Suspense>
             )}
             {isCategoryManagerOpen && (
-                <CategoryManager onClose={() => setIsCategoryManagerOpen(false)} />
+                <Suspense fallback={<div/>}>
+                    <CategoryManager onClose={() => setIsCategoryManagerOpen(false)} />
+                </Suspense>
             )}
             {isFrequentExpenseManagerOpen && activeTrip && (
-                <FrequentExpenseManager 
-                    activeTrip={activeTrip}
-                    onClose={() => setIsFrequentExpenseManagerOpen(false)} 
-                />
+                <Suspense fallback={<div/>}>
+                    <FrequentExpenseManager 
+                        activeTrip={activeTrip}
+                        onClose={() => setIsFrequentExpenseManagerOpen(false)} 
+                    />
+                </Suspense>
             )}
         </>
     );

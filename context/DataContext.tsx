@@ -75,13 +75,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         }
     }, [user]);
 
-    const setDefaultTrip = (tripId: string | null) => {
+    const setDefaultTrip = useCallback((tripId: string | null) => {
         if (!data) return;
         const newData = { ...data, defaultTripId: tripId || undefined };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const addTrip = (trip: Omit<Trip, 'id' | 'expenses'>) => {
+    const addTrip = useCallback((trip: Omit<Trip, 'id' | 'expenses'>) => {
         if (!data) return;
         const newTrip: Trip = { 
             ...trip, 
@@ -93,16 +93,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         };
         const newData = { ...data, trips: [...data.trips, newTrip] };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const updateTrip = (updatedTrip: Trip) => {
+    const updateTrip = useCallback((updatedTrip: Trip) => {
         if (!data) return;
         const updatedTrips = data.trips.map(t => t.id === updatedTrip.id ? updatedTrip : t);
         const newData = { ...data, trips: updatedTrips };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const deleteTrip = (tripId: string) => {
+    const deleteTrip = useCallback((tripId: string) => {
         if (!data) return;
         const updatedTrips = data.trips.filter(t => t.id !== tripId);
         
@@ -113,9 +113,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
         const newData = { ...data, trips: updatedTrips, defaultTripId: newDefaultTripId };
         saveData(newData);
-    };
+    }, [data, saveData]);
     
-    const addExpense = (tripId: string, expense: Omit<Expense, 'id'>) => {
+    const addExpense = useCallback((tripId: string, expense: Omit<Expense, 'id'>) => {
         if (!data) return;
         const newExpense: Expense = { ...expense, id: Date.now().toString() };
         const updatedTrips = data.trips.map(trip => {
@@ -128,9 +128,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         });
         const newData = { ...data, trips: updatedTrips };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const updateExpense = (tripId: string, updatedExpense: Expense) => {
+    const updateExpense = useCallback((tripId: string, updatedExpense: Expense) => {
         if (!data) return;
         const updatedTrips = data.trips.map(trip => {
             if (trip.id === tripId) {
@@ -142,9 +142,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         });
         const newData = { ...data, trips: updatedTrips };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const deleteExpense = (tripId: string, expenseId: string) => {
+    const deleteExpense = useCallback((tripId: string, expenseId: string) => {
         if (!data) return;
         const updatedTrips = data.trips.map(trip => {
             if (trip.id === tripId) {
@@ -156,16 +156,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         });
         const newData = { ...data, trips: updatedTrips };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const addCategory = (category: Omit<Category, 'id'>) => {
+    const addCategory = useCallback((category: Omit<Category, 'id'>) => {
         if (!data) return;
         const newCategory: Category = { ...category, id: `custom-cat-${Date.now().toString()}` };
         const newData = { ...data, categories: [...data.categories, newCategory] };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const updateCategory = (updatedCategory: Category) => {
+    const updateCategory = useCallback((updatedCategory: Category) => {
         if (!data) return;
         const oldCategory = data.categories.find(c => c.id === updatedCategory.id);
         const updatedCategories = data.categories.map(c => c.id === updatedCategory.id ? updatedCategory : c);
@@ -181,9 +181,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
         const newData = { ...data, trips: updatedTrips, categories: updatedCategories };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
-    const deleteCategory = (categoryId: string) => {
+    const deleteCategory = useCallback((categoryId: string) => {
         if (!data) return;
         if (DEFAULT_CATEGORIES.some(c => c.id === categoryId)) {
             alert("Le categorie predefinite non possono essere eliminate.");
@@ -217,7 +217,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         const updatedCategories = data.categories.filter(c => c.id !== categoryId);
         const newData = { ...data, trips: updatedTrips, categories: updatedCategories };
         saveData(newData);
-    };
+    }, [data, saveData]);
 
     const value = {
         data,
