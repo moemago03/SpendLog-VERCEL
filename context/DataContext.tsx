@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback, ReactNode, useC
 import { UserData, Trip, Expense, Category, CategoryBudget } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
 import { fetchData, saveData as saveCloudData } from '../services/googleSheetService';
+import { useNotification } from './NotificationContext';
 
 interface DataContextProps {
     data: UserData | null;
@@ -16,6 +17,7 @@ interface DataContextProps {
     updateCategory: (category: Category) => void;
     deleteCategory: (categoryId: string) => void;
     setDefaultTrip: (tripId: string | null) => void;
+    refetchData: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
@@ -30,55 +32,74 @@ interface DataProviderProps {
 export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) => {
     const [data, setData] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const { addNotification } = useNotification();
+
+    const loadData = useCallback(async (isRefetch = false) => {
+        if (!user) {
+            if (!isRefetch) setLoading(false);
+            return;
+        }
+        if (!isRefetch) setLoading(true);
+
+        try {
+            let fetchedData = await fetchData(user);
+
+            if (!fetchedData) {
+                fetchedData = defaultUserData;
+            } else {
+                if (!fetchedData.categories || fetchedData.categories.length === 0) {
+                    fetchedData.categories = DEFAULT_CATEGORIES;
+                }
+                const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
+                const missingDefaults = DEFAULT_CATEGORIES.filter(dc => !fetchedData.categories.some(uc => uc.id === dc.id));
+                if (missingDefaults.length > 0) {
+                    const customCategories = fetchedData.categories.filter(c => !defaultIds.has(c.id));
+                    fetchedData.categories = [...DEFAULT_CATEGORIES, ...customCategories];
+                }
+            }
+            
+            setData(fetchedData);
+            if (isRefetch) {
+                addNotification('Dati aggiornati con successo!', 'success');
+            }
+        } catch (error) {
+            console.error("Failed to load data", error);
+            addNotification("Impossibile caricare i dati. Controlla la connessione.", 'error');
+            if (!isRefetch) setData(defaultUserData);
+        } finally {
+            if (!isRefetch) setLoading(false);
+        }
+    }, [user, addNotification]);
 
     useEffect(() => {
-        const loadData = async () => {
-            if (!user) {
-                setLoading(false);
-                // This state should not be reachable if app flow is correct
-                return; 
-            }
-            try {
-                let fetchedData = await fetchData(user);
+        loadData(false);
+    }, [loadData]);
 
-                if (!fetchedData) { // If user is new, API returns null
-                    fetchedData = defaultUserData;
-                } else {
-                    // Ensure default categories are always present if missing from fetched data
-                    if (!fetchedData.categories || fetchedData.categories.length === 0) {
-                        fetchedData.categories = DEFAULT_CATEGORIES;
-                    }
-                    const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
-                    const missingDefaults = DEFAULT_CATEGORIES.filter(dc => !fetchedData.categories.some(uc => uc.id === dc.id));
-                    if(missingDefaults.length > 0) {
-                        const customCategories = fetchedData.categories.filter(c => !defaultIds.has(c.id));
-                        fetchedData.categories = [...DEFAULT_CATEGORIES, ...customCategories];
-                    }
-                }
-                
-                setData(fetchedData);
-            } catch (error) {
-                console.error("Failed to load initial data", error);
-                setData(defaultUserData); // Fallback to default data on error
-            } finally {
-                setLoading(false);
-            }
-        };
+    const refetchData = useCallback(async () => {
+        await loadData(true);
+    }, [loadData]);
 
-        loadData();
-    }, [user]);
-
-    const saveData = useCallback((newData: UserData) => {
+    const saveData = useCallback(async (newData: UserData, successMessage?: string) => {
         if (user) {
             setData(newData); // Optimistic update
-            saveCloudData(user, newData); // Save to cloud in the background
+            try {
+                await saveCloudData(user, newData);
+                if (successMessage) {
+                    addNotification(successMessage, 'success');
+                }
+            } catch (error) {
+                console.error("Failed to save data:", error);
+                addNotification('Errore di salvataggio. Le modifiche potrebbero non essere state salvate.', 'error');
+                // Optionally revert data here
+                loadData(true); // Refetch to get last good state
+            }
         }
-    }, [user]);
+    }, [user, addNotification, loadData]);
 
     const setDefaultTrip = useCallback((tripId: string | null) => {
         if (!data) return;
         const newData = { ...data, defaultTripId: tripId || undefined };
-        saveData(newData);
+        saveData(newData, 'Viaggio predefinito impostato.');
     }, [data, saveData]);
 
     const addTrip = useCallback((trip: Omit<Trip, 'id' | 'expenses'>) => {
@@ -92,14 +113,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
             categoryBudgets: trip.categoryBudgets || []
         };
         const newData = { ...data, trips: [...data.trips, newTrip] };
-        saveData(newData);
+        saveData(newData, 'Viaggio creato con successo.');
     }, [data, saveData]);
 
     const updateTrip = useCallback((updatedTrip: Trip) => {
         if (!data) return;
         const updatedTrips = data.trips.map(t => t.id === updatedTrip.id ? updatedTrip : t);
         const newData = { ...data, trips: updatedTrips };
-        saveData(newData);
+        saveData(newData, 'Viaggio aggiornato.');
     }, [data, saveData]);
 
     const deleteTrip = useCallback((tripId: string) => {
@@ -108,11 +129,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         
         let newDefaultTripId = data.defaultTripId;
         if (data.defaultTripId === tripId) {
-            newDefaultTripId = undefined; // Reset if the default is deleted
+            newDefaultTripId = undefined;
         }
 
         const newData = { ...data, trips: updatedTrips, defaultTripId: newDefaultTripId };
-        saveData(newData);
+        saveData(newData, 'Viaggio eliminato.');
     }, [data, saveData]);
     
     const addExpense = useCallback((tripId: string, expense: Omit<Expense, 'id'>) => {
@@ -120,49 +141,45 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         const newExpense: Expense = { ...expense, id: Date.now().toString() };
         const updatedTrips = data.trips.map(trip => {
             if (trip.id === tripId) {
-                // FIX: Ensure trip.expenses is an array before spreading. This prevents errors
-                // on older trip data that might not have this property initialized.
                 return { ...trip, expenses: [...(trip.expenses || []), newExpense] };
             }
             return trip;
         });
         const newData = { ...data, trips: updatedTrips };
-        saveData(newData);
+        saveData(newData, 'Spesa aggiunta.');
     }, [data, saveData]);
 
     const updateExpense = useCallback((tripId: string, updatedExpense: Expense) => {
         if (!data) return;
         const updatedTrips = data.trips.map(trip => {
             if (trip.id === tripId) {
-                // FIX: Gracefully handle cases where trip.expenses might be undefined.
                 const updatedExpenses = (trip.expenses || []).map(e => e.id === updatedExpense.id ? updatedExpense : e);
                 return { ...trip, expenses: updatedExpenses };
             }
             return trip;
         });
         const newData = { ...data, trips: updatedTrips };
-        saveData(newData);
+        saveData(newData, 'Spesa aggiornata.');
     }, [data, saveData]);
 
     const deleteExpense = useCallback((tripId: string, expenseId: string) => {
         if (!data) return;
         const updatedTrips = data.trips.map(trip => {
             if (trip.id === tripId) {
-                // FIX: Ensure filtering happens on an array, even if trip.expenses is missing.
                 const updatedExpenses = (trip.expenses || []).filter(e => e.id !== expenseId);
                 return { ...trip, expenses: updatedExpenses };
             }
             return trip;
         });
         const newData = { ...data, trips: updatedTrips };
-        saveData(newData);
+        saveData(newData, 'Spesa eliminata.');
     }, [data, saveData]);
 
     const addCategory = useCallback((category: Omit<Category, 'id'>) => {
         if (!data) return;
         const newCategory: Category = { ...category, id: `custom-cat-${Date.now().toString()}` };
         const newData = { ...data, categories: [...data.categories, newCategory] };
-        saveData(newData);
+        saveData(newData, 'Categoria creata.');
     }, [data, saveData]);
 
     const updateCategory = useCallback((updatedCategory: Category) => {
@@ -174,19 +191,18 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         if(oldCategory && oldCategory.name !== updatedCategory.name) {
             updatedTrips = data.trips.map(trip => ({
                 ...trip,
-                // FIX: Handle trips where expenses might not be initialized.
                 expenses: (trip.expenses || []).map(exp => exp.category === oldCategory.name ? { ...exp, category: updatedCategory.name } : exp)
             }));
         }
 
         const newData = { ...data, trips: updatedTrips, categories: updatedCategories };
-        saveData(newData);
+        saveData(newData, 'Categoria aggiornata.');
     }, [data, saveData]);
 
     const deleteCategory = useCallback((categoryId: string) => {
         if (!data) return;
         if (DEFAULT_CATEGORIES.some(c => c.id === categoryId)) {
-            alert("Le categorie predefinite non possono essere eliminate.");
+            addNotification("Le categorie predefinite non possono essere eliminate.", 'error');
             return;
         }
 
@@ -195,7 +211,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
         const miscellaneousCategory = data.categories.find(c => c.id === 'cat-8');
         if (!miscellaneousCategory) {
-            alert("Impossibile trovare la categoria 'Varie' per riassegnare le spese.");
+            addNotification("Impossibile trovare la categoria 'Varie' per riassegnare le spese.", 'error');
             return;
         }
         
@@ -216,8 +232,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
         const updatedCategories = data.categories.filter(c => c.id !== categoryId);
         const newData = { ...data, trips: updatedTrips, categories: updatedCategories };
-        saveData(newData);
-    }, [data, saveData]);
+        saveData(newData, 'Categoria eliminata.');
+    }, [data, saveData, addNotification]);
 
     const value = {
         data,
@@ -232,6 +248,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         updateCategory,
         deleteCategory,
         setDefaultTrip,
+        refetchData,
     };
 
     return (

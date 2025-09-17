@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, ReactNode, useContext } from 'react';
 import { MOCK_EXCHANGE_RATES } from '../constants';
+import { useNotification } from './NotificationContext';
 
 interface ExchangeRates {
     rates: { [key: string]: number };
@@ -21,6 +22,7 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
     const [rates, setRates] = useState<{ [key: string]: number }>(MOCK_EXCHANGE_RATES);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const { addNotification } = useNotification();
 
     useEffect(() => {
         // On initial load, try to get rates from local storage for offline use.
@@ -54,13 +56,14 @@ export const CurrencyProvider: React.FC<{ children: ReactNode }> = ({ children }
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToStore));
             setRates(newRates);
             setLastUpdated(newLastUpdated);
+            addNotification('Tassi di cambio aggiornati.', 'success');
         } catch (error) {
             console.error("Failed to save exchange rates to local storage", error);
-            alert("Could not save updated exchange rates.");
+            addNotification("Impossibile salvare i tassi di cambio aggiornati.", 'error');
         } finally {
             setIsUpdating(false);
         }
-    }, []);
+    }, [addNotification]);
 
     const value = { rates, lastUpdated, isUpdating, updateRates };
 

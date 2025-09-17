@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { DataProvider, useData } from './context/DataContext';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationContainer from './components/NotificationContainer';
 import LoginScreen from './components/LoginScreen';
 import Dashboard from './components/Dashboard';
 import ProfileScreen from './components/ProfileScreen';
@@ -10,6 +12,13 @@ import LoadingScreen from './components/LoadingScreen';
 
 export type AppView = 'summary' | 'stats' | 'currency' | 'profile';
 
+const viewIndices: { [key in AppView]: number } = {
+    summary: 0,
+    stats: 1,
+    currency: 2,
+    profile: 3,
+};
+
 const AppContent: React.FC<{
     onLogout: () => void;
     isInstallable: boolean;
@@ -17,7 +26,30 @@ const AppContent: React.FC<{
 }> = memo(({ onLogout, isInstallable, onInstall }) => {
     const [activeTripId, setActiveTripId] = useState<string | null>(null);
     const [activeView, setActiveView] = useState<AppView>('summary');
+    const [animationClass, setAnimationClass] = useState('animate-view-transition');
     const { data, loading, setDefaultTrip } = useData();
+
+    const changeView = useCallback((newView: AppView, isSlide: boolean) => {
+        setActiveView(currentActiveView => {
+            if (newView === currentActiveView) {
+                return currentActiveView;
+            }
+
+            if (isSlide) {
+                const currentIndex = viewIndices[currentActiveView];
+                const newIndex = viewIndices[newView];
+                
+                if (newIndex > currentIndex) {
+                    setAnimationClass('animate-slide-in-right');
+                } else { // newIndex < currentIndex
+                    setAnimationClass('animate-slide-in-left');
+                }
+            } else {
+                setAnimationClass('animate-view-transition');
+            }
+            return newView;
+        });
+    }, []);
 
     useEffect(() => {
         // This effect handles the initial loading of the default trip.
@@ -32,14 +64,14 @@ const AppContent: React.FC<{
         if (defaultTripId && data.trips.some(t => t.id === defaultTripId)) {
             // A valid default trip was found. Set it as the active trip and show the summary view.
             setActiveTripId(defaultTripId);
-            setActiveView('summary');
+            changeView('summary', false);
         } else {
             // No default trip is set, or the stored one is invalid (e.g., deleted).
             // Redirect to the profile screen for the user to select a trip.
             setActiveTripId(null);
-            setActiveView('profile');
+            changeView('profile', false);
         }
-    }, [data, loading]); // Dependencies ensure this runs once after data is loaded.
+    }, [data, loading, changeView]); // Dependencies ensure this runs once after data is loaded.
 
     const activeTrip = data?.trips.find(t => t.id === activeTripId) || null;
 
@@ -83,16 +115,16 @@ const AppContent: React.FC<{
 
         if (tripId === 'none') {
              setActiveTripId(null);
-             setActiveView('profile');
+             changeView('profile', false);
         } else {
             setActiveTripId(tripId);
-            setActiveView('summary'); // Switch to summary for the new default trip
+            changeView('summary', false); // Switch to summary for the new default trip
         }
-    }, [setDefaultTrip]);
+    }, [setDefaultTrip, changeView]);
     
     const handleNavigation = useCallback((view: AppView) => {
-        setActiveView(view);
-    }, []);
+        changeView(view, true);
+    }, [changeView]);
 
     if (loading) {
         return <LoadingScreen />;
@@ -141,8 +173,8 @@ const AppContent: React.FC<{
     
     return (
         <div className="min-h-screen bg-background text-on-background font-sans">
-            <main className="pb-20">
-                 <div key={activeView + activeTripId} className="animate-view-transition">
+            <main className="pb-20 overflow-x-hidden">
+                 <div key={activeView + activeTripId} className={animationClass}>
                     {renderMainContent()}
                 </div>
             </main>
@@ -213,15 +245,18 @@ const App: React.FC = () => {
     
     return (
         <ThemeProvider>
-            <DataProvider user={user}>
-                <CurrencyProvider>
-                    <AppContent 
-                        onLogout={handleLogout} 
-                        isInstallable={isInstallable}
-                        onInstall={handleInstallClick}
-                    />
-                </CurrencyProvider>
-            </DataProvider>
+            <NotificationProvider>
+                <DataProvider user={user}>
+                    <CurrencyProvider>
+                        <AppContent 
+                            onLogout={handleLogout} 
+                            isInstallable={isInstallable}
+                            onInstall={handleInstallClick}
+                        />
+                    </CurrencyProvider>
+                </DataProvider>
+                <NotificationContainer />
+            </NotificationProvider>
         </ThemeProvider>
     );
 };

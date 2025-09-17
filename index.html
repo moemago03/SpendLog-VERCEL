@@ -115,6 +115,14 @@
         50% { transform: scale(0.92); }
         100% { transform: scale(1); }
       }
+      @keyframes slideInFromRight {
+        from { transform: translateX(40px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideInFromLeft {
+        from { transform: translateX(-40px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
       .animate-fade-in {
         animation: fadeIn 0.4s ease-out forwards;
       }
@@ -127,6 +135,12 @@
       }
       .animate-press {
         animation: press 0.2s ease-out;
+      }
+      .animate-slide-in-right {
+        animation: slideInFromRight 0.3s ease-out forwards;
+      }
+      .animate-slide-in-left {
+        animation: slideInFromLeft 0.3s ease-out forwards;
       }
     </style>
     <script>

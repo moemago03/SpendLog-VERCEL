@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Trip } from '../types';
 import { useData } from '../context/DataContext';
 import { CURRENCY_TO_COUNTRY } from '../constants';
+import { useNotification } from '../context/NotificationContext';
 
 interface QuickExpenseProps {
     trip: Trip;
@@ -9,15 +10,14 @@ interface QuickExpenseProps {
 
 const QuickExpense: React.FC<QuickExpenseProps> = ({ trip }) => {
     const { addExpense, data } = useData();
+    const { addNotification } = useNotification();
     const [prompt, setPrompt] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const handleAddExpense = async () => {
         if (!prompt.trim()) return;
         
         setIsLoading(true);
-        setError(null);
 
         try {
             // Dynamically import the module only when needed to prevent load-time errors
@@ -70,7 +70,7 @@ const QuickExpense: React.FC<QuickExpenseProps> = ({ trip }) => {
             }
         } catch (e: any) {
             console.error("Error processing quick expense:", e);
-            setError(`Impossibile aggiungere la spesa. ${e.message || 'Riprova o usa il modulo completo.'}`);
+            addNotification(`Impossibile aggiungere: ${e.message || 'Riprova.'}`, 'error');
         } finally {
             setIsLoading(false);
         }
@@ -105,7 +105,6 @@ const QuickExpense: React.FC<QuickExpenseProps> = ({ trip }) => {
                     <span>Aggiungi</span>
                 </button>
             </div>
-            {error && <p className="text-error text-sm mt-2">{error}</p>}
         </div>
     );
 };

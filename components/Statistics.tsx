@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { Trip, Expense } from '../types';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 import { PieChart, Pie, ResponsiveContainer, Cell } from 'recharts';
-import { CURRENCY_INFO } from '../constants';
+import { CURRENCY_INFO, FLAG_SVGS } from '../constants';
 
 type TimePeriod = 'week' | 'month' | '6months' | 'all';
 type GroupByType = 'category' | 'country' | 'currency';
@@ -113,6 +113,7 @@ const GroupedSpendingList: React.FC<{ data: any[]; currency: string; groupBy: Gr
                 <div className="relative" ref={menuRef}>
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-1 text-lg font-bold text-on-surface hover:bg-surface/50 p-2 rounded-lg">
                         Per {currentLabel}
+                        {/* FIX: Corrected typo from `isMenu-open` to `isMenuOpen` to fix reference and type errors. */}
                         <span className={`material-symbols-outlined transition-transform ${isMenuOpen ? 'rotate-180' : ''}`}>expand_more</span>
                     </button>
                     {isMenuOpen && (
@@ -143,6 +144,23 @@ const GroupedSpendingList: React.FC<{ data: any[]; currency: string; groupBy: Gr
         </div>
     );
 };
+
+const ChartSkeleton: React.FC = () => (
+    <div className="bg-surface-variant/50 p-4 rounded-3xl">
+        <div className="w-full h-56 relative flex flex-col items-center justify-center">
+            <div className="w-36 h-36 bg-surface rounded-full"></div>
+        </div>
+    </div>
+);
+
+const ListSkeleton: React.FC = () => (
+    <div className="bg-surface-variant/50 p-4 rounded-3xl space-y-2">
+        <div className="h-8 w-1/3 bg-surface rounded-lg"></div>
+        <div className="h-16 bg-surface rounded-lg mt-4"></div>
+        <div className="h-16 bg-surface rounded-lg"></div>
+        <div className="h-16 bg-surface rounded-lg"></div>
+    </div>
+);
 
 // ===================================================================================
 // Main Statistics Component
@@ -200,7 +218,8 @@ const Statistics: React.FC<{ trip: Trip; expenses: Expense[] }> = ({ trip, expen
                 case 'country': return '🌍';
                 case 'currency':
                     const info = CURRENCY_INFO[key];
-                    if(info?.flag) return <img src={`https://flagcdn.com/w20/${info.flag}.png`} alt={key} className="w-5 h-5 rounded-full" />;
+                    const flagSvg = info ? FLAG_SVGS[info.flag.toUpperCase()] : null;
+                    if(flagSvg) return <img src={flagSvg} alt={key} className="w-5 h-5 rounded-full" />;
                     return '💰';
              }
         }
@@ -225,7 +244,9 @@ const Statistics: React.FC<{ trip: Trip; expenses: Expense[] }> = ({ trip, expen
                  <div className="flex items-center justify-between mb-4">
                     <h2 className="text-3xl font-bold">Statistiche</h2>
                 </div>
-                <SpendingDonutChart data={processedData.groupedData} total={processedData.totalSpent} currency={trip.mainCurrency} timeLabel={timePeriodFullLabels[timePeriod]} />
+                <Suspense fallback={<ChartSkeleton />}>
+                    <SpendingDonutChart data={processedData.groupedData} total={processedData.totalSpent} currency={trip.mainCurrency} timeLabel={timePeriodFullLabels[timePeriod]} />
+                </Suspense>
             </div>
 
             <div className="flex justify-center items-center gap-2 p-1 bg-surface-variant rounded-full">
@@ -241,8 +262,10 @@ const Statistics: React.FC<{ trip: Trip; expenses: Expense[] }> = ({ trip, expen
                     </button>
                 ))}
             </div>
-
-            <GroupedSpendingList data={processedData.groupedData} currency={trip.mainCurrency} groupBy={groupBy} setGroupBy={setGroupBy} />
+            
+            <Suspense fallback={<ListSkeleton />}>
+                <GroupedSpendingList data={processedData.groupedData} currency={trip.mainCurrency} groupBy={groupBy} setGroupBy={setGroupBy} />
+            </Suspense>
         </div>
     );
 };

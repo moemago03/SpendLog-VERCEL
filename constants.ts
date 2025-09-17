@@ -115,3 +115,22 @@ export const CURRENCY_INFO: { [key: string]: { name: string; flag: string; } } =
     'KRW': { name: 'Corea del Sud', flag: 'kr' },
     'CNY': { name: 'Cina', flag: 'cn' },
 };
+
+// FIX: Add FLAG_SVGS constant to provide flag image URLs.
+// This resolves missing import errors in other components.
+export const FLAG_SVGS: { [key: string]: string } = {
+    'EU': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/eu.svg`,
+    'US': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/us.svg`,
+    'GB': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/gb.svg`,
+    'TH': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/th.svg`,
+    'VN': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/vn.svg`,
+    'KH': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/kh.svg`,
+    'LA': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/la.svg`,
+    'MY': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/my.svg`,
+    'SG': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/sg.svg`,
+    'ID': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/id.svg`,
+    'PH': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/ph.svg`,
+    'JP': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/jp.svg`,
+    'KR': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/kr.svg`,
+    'CN': `https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/cn.svg`,
+};

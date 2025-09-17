@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect, lazy, Suspense, useCallback } from 'react';
 import { useData } from '../context/DataContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
-import { Expense } from '../types';
+import { Expense, Trip } from '../types';
 import ExpenseList from './ExpenseList';
 import CurrencyConverter from './CurrencyConverter';
 import CategoryBudgetTracker from './CategoryBudgetTracker';
+import ExpenseListSkeleton from './ExpenseListSkeleton';
 
 const ExpenseForm = lazy(() => import('./ExpenseForm'));
 const AIPanel = lazy(() => import('./AIPanel'));
@@ -59,11 +61,14 @@ const StatisticsSkeleton = () => (
 
 
 const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
-    const { data } = useData();
+    const { data, refetchData } = useData();
+    const { updateRates } = useCurrency();
     const { convert } = useCurrencyConverter();
     const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
     const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isFiltering, setIsFiltering] = useState(false);
     
     type TimeFilter = 'today' | 'yesterday' | 'last3days';
     const [timeFilter, setTimeFilter] = useState<TimeFilter>('last3days');
@@ -71,7 +76,13 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     const filterRef = useRef<HTMLDivElement>(null);
     useOutsideClick(filterRef, () => setIsFilterOpen(false));
 
-    const activeTrip = data.trips.find(t => t.id === activeTripId);
+    // Pull to refresh state
+    const [pullStart, setPullStart] = useState<number | null>(null);
+    const [pullDelta, setPullDelta] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const pullThreshold = 80;
+
+    const activeTrip = useMemo(() => data.trips.find(t => t.id === activeTripId), [data.trips, activeTripId]);
 
     const formatCurrencyInteger = (amount: number, currency: string) => {
         return new Intl.NumberFormat('it-IT', {
@@ -160,9 +171,29 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                 return expDate >= threeDaysAgo && expDate <= now;
             });
         }
+        
+        if (searchQuery.trim() !== '') {
+            const lowercasedQuery = searchQuery.toLowerCase();
+            expenses = expenses.filter(exp => 
+                exp.category.toLowerCase().includes(lowercasedQuery) ||
+                exp.amount.toString().includes(lowercasedQuery) ||
+                exp.currency.toLowerCase().includes(lowercasedQuery)
+            );
+        }
+        
+        // After filtering is done, turn off the filtering state
+        // Using setTimeout to defer this to the next event loop cycle
+        // ensuring the UI has a chance to render the skeleton first.
+        setTimeout(() => setIsFiltering(false), 0);
+
         return expenses;
-    }, [sortedExpenses, timeFilter]);
+    }, [sortedExpenses, timeFilter, searchQuery]);
     
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsFiltering(true);
+        setSearchQuery(e.target.value);
+    };
+
     const handleEditExpense = useCallback((expense: Expense) => {
         setEditingExpense(expense);
         setIsExpenseFormOpen(true);
@@ -184,6 +215,54 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         setIsFilterOpen(false);
     }, []);
 
+    const handleRefresh = useCallback(async () => {
+        if (isRefreshing) return;
+        setIsRefreshing(true);
+        triggerHapticFeedback();
+        // A small haptic feedback on refresh start
+        if (navigator.vibrate) navigator.vibrate(20); 
+
+        await Promise.all([
+            refetchData(),
+            updateRates()
+        ]);
+
+        // Give a moment for the user to see the checkmark
+        setTimeout(() => {
+            setIsRefreshing(false);
+            setPullDelta(0);
+        }, 500);
+    }, [isRefreshing, refetchData, updateRates]);
+
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (window.scrollY === 0) {
+            setPullStart(e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (pullStart === null || isRefreshing) return;
+        
+        const delta = e.touches[0].clientY - pullStart;
+        if (delta > 0) {
+             // Dampen the pull effect for a more natural feel
+            const dampenedDelta = Math.pow(delta, 0.85);
+            setPullDelta(dampenedDelta);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (isRefreshing) return;
+        
+        if (pullDelta > pullThreshold) {
+            setPullDelta(60); // Snap to loading position
+            handleRefresh();
+        } else {
+            setPullDelta(0);
+        }
+        setPullStart(null);
+    };
+
     if (!activeTrip) {
         return <div className="p-8 text-center">Viaggio non trovato o non ancora selezionato.</div>;
     }
@@ -194,11 +273,35 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         last3days: 'Ultimi 3 giorni',
     };
 
-    const summaryContent = (() => {
-        const spentPercentage = stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0;
-        const isOverBudget = stats.totalSpent > stats.budget;
-        return (
-            <div className="p-4 space-y-6">
+    const summaryContent = (
+        <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+            <div
+                className="absolute top-0 left-0 right-0 flex justify-center items-center -z-10 transition-transform"
+                style={{ transform: `translateY(${Math.min(pullDelta, 60)}px)` }}
+            >
+                <div 
+                    className="p-3 bg-surface-variant rounded-full mt-2 transition-opacity"
+                    style={{ opacity: isRefreshing ? 1 : Math.min(pullDelta / pullThreshold, 1) }}
+                >
+                     {isRefreshing ? (
+                        <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : (
+                        <span 
+                            className="material-symbols-outlined text-on-surface-variant transition-transform" 
+                            style={{ transform: `rotate(${Math.min(pullDelta / pullThreshold, 1) * 180}deg)` }}
+                        >
+                            arrow_downward
+                        </span>
+                    )}
+                </div>
+            </div>
+            <div 
+                className="p-4 space-y-6 transition-transform"
+                style={{ transform: `translateY(${pullDelta}px)` }}
+            >
                 <header className="flex justify-between items-start">
                     <h1 className="text-3xl font-bold text-on-background">{activeTrip.name}</h1>
                     <div className="text-right">
@@ -238,8 +341,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                         <div 
                             className="h-2.5 rounded-full" 
                             style={{ 
-                                width: `${spentPercentage}%`, 
-                                backgroundColor: isOverBudget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
+                                width: `${stats.budget > 0 ? Math.min((stats.totalSpent / stats.budget) * 100, 100) : 0}%`, 
+                                backgroundColor: stats.totalSpent > stats.budget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
                                 transition: 'width 0.5s ease-out, background-color 0.3s ease-out' 
                             }}>
                         </div>
@@ -273,11 +376,28 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                         )}
                     </div>
                 </div>
-
-                <ExpenseList expenses={filteredExpenses} trip={activeTrip} onEditExpense={handleEditExpense} />
+                
+                <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/70 pointer-events-none">search</span>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        placeholder="Cerca per categoria, importo, valuta..."
+                        className="w-full bg-surface-variant border-2 border-transparent rounded-full py-3 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                </div>
+                
+                 <div className="min-h-[250px]">
+                    {isFiltering ? (
+                        <ExpenseListSkeleton />
+                    ) : (
+                        <ExpenseList expenses={filteredExpenses} trip={activeTrip} onEditExpense={handleEditExpense} />
+                    )}
+                </div>
             </div>
-        );
-    })();
+        </div>
+    );
     
     const statsContent = (
         <div className="p-4 space-y-6">
@@ -301,8 +421,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     
     return (
         <div className="relative min-h-screen">
-            {/* Scrollable content with animation */}
-            <div>
+            <div className="relative">
                 {currentView === 'summary' && summaryContent}
                 {currentView === 'stats' && statsContent}
                 {currentView === 'currency' && currencyContent}

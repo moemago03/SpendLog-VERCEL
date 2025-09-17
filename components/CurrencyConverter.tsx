@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Trip } from '../types';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 import { useCurrency } from '../context/CurrencyContext';
-import { CURRENCY_INFO } from '../constants';
+import { CURRENCY_INFO, FLAG_SVGS } from '../constants';
 
 interface CurrencyConverterProps {
     trip: Trip;
@@ -39,7 +39,7 @@ const CurrencySelectorModal: React.FC<{
                                 className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-variant text-left"
                             >
                                 <img
-                                    src={`https://flagcdn.com/w40/${currency.flag}.png`}
+                                    src={FLAG_SVGS[currency.flag.toUpperCase()]}
                                     alt={`Bandiera ${currency.name}`}
                                     className="w-8 h-6 object-cover rounded-md"
                                 />
@@ -115,17 +115,19 @@ const CurrencyConverter: React.FC<CurrencyConverterProps> = ({ trip }) => {
     const CurrencyDisplayButton: React.FC<{ currencyCode: string; onClick: () => void }> = ({ currencyCode, onClick }) => {
         const info = CURRENCY_INFO[currencyCode];
         if (!info) return null;
+        
+        const flagSvg = FLAG_SVGS[info.flag.toUpperCase()];
 
         return (
             <button
                 onClick={onClick}
                 className="flex items-center gap-2.5 p-2.5 rounded-xl bg-surface-variant hover:bg-primary-container/50 transition-colors w-full text-left"
             >
-                <img
-                    src={`https://flagcdn.com/w40/${info.flag}.png`}
+                {flagSvg && <img
+                    src={flagSvg}
                     alt={`Bandiera ${info.name}`}
                     className="w-8 h-6 object-cover rounded-md"
-                />
+                />}
                 <div className="flex-grow min-w-0">
                     <p className="font-bold text-on-surface text-base">{currencyCode}</p>
                     <p className="text-xs text-on-surface-variant truncate">{info.name}</p>

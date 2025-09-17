@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { Trip, FrequentExpense, CategoryBudget } from '../types';
 import { COUNTRIES_CURRENCIES, ALL_CURRENCIES, TRIP_CARD_COLORS } from '../constants';
+import { useNotification } from '../context/NotificationContext';
 
 interface TripFormProps {
     trip?: Trip;
@@ -10,6 +11,7 @@ interface TripFormProps {
 
 const TripForm: React.FC<TripFormProps> = ({ trip, onClose }) => {
     const { addTrip, updateTrip, data } = useData();
+    const { addNotification } = useNotification();
     const [name, setName] = useState(trip?.name || '');
     const [startDate, setStartDate] = useState(trip?.startDate.split('T')[0] || '');
     const [endDate, setEndDate] = useState(trip?.endDate.split('T')[0] || '');
@@ -69,7 +71,7 @@ const TripForm: React.FC<TripFormProps> = ({ trip, onClose }) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !startDate || !endDate || totalBudget <= 0 || countries.length === 0 || !mainCurrency) {
-            alert("Per favore, compila tutti i campi obbligatori.");
+            addNotification("Per favore, compila tutti i campi obbligatori.", 'error');
             return;
         }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Trip, Expense, FrequentExpense } from '../types';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
+import { useNotification } from '../context/NotificationContext';
 
 const triggerHapticFeedback = () => {
     if (navigator.vibrate) navigator.vibrate(10);
@@ -24,6 +25,7 @@ const ExpenseForm: React.FC<{
 }> = ({ trip, expense, onClose }) => {
     const { addExpense, updateExpense, data } = useData();
     const { convert, formatCurrency } = useCurrencyConverter();
+    const { addNotification } = useNotification();
     const [amount, setAmount] = useState(expense?.amount ? expense.amount.toString() : '');
     const [currency, setCurrency] = useState(expense?.currency || trip.mainCurrency);
     const [category, setCategory] = useState(expense?.category || data.categories[0]?.name || '');
@@ -48,7 +50,7 @@ const ExpenseForm: React.FC<{
         triggerHapticFeedback();
         const numericAmount = parseFloat(amount);
         if (!numericAmount || numericAmount <= 0 || !category || !date) {
-            alert("Per favore, compila tutti i campi correttamente.");
+            addNotification("Per favore, compila tutti i campi correttamente.", 'error');
             return;
         }
 

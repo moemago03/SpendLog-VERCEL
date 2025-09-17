@@ -4,7 +4,6 @@ import { UserData } from '../types';
 export const fetchData = async (password: string): Promise<UserData> => {
     if (!GOOGLE_SCRIPT_URL) {
         const errorMsg = "Google Script URL is not configured. Please update config.ts";
-        alert(errorMsg);
         throw new Error(errorMsg);
     }
     
@@ -16,7 +15,6 @@ export const fetchData = async (password: string): Promise<UserData> => {
         return await response.json();
     } catch(e) {
         console.error("Error fetching data:", e);
-        alert("Could not fetch your data. Please check your internet connection and ensure the Google Script is set up correctly.");
         throw e;
     }
 };
@@ -50,7 +48,6 @@ export const saveData = async (password: string, data: UserData): Promise<void> 
 
     } catch(e: any) {
         console.error("Error saving data:", e);
-        alert(`Failed to save data to the cloud. Your changes might be lost. Error: ${e.message}`);
         // Optionally, re-throw the error if the calling context needs to handle it
         throw e;
     }
