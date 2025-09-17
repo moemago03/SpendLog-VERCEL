@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { Trip } from '../types';
 import ThemeToggle from './ThemeToggle';
@@ -13,8 +14,6 @@ interface ProfileScreenProps {
     activeTripId: string | null;
     onSetDefaultTrip: (tripId: string) => void;
     onLogout: () => void;
-    isInstallable: boolean;
-    onInstall: () => void;
 }
 
 const SettingsItem: React.FC<{
@@ -37,7 +36,7 @@ const SettingsItem: React.FC<{
 );
 
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSetDefaultTrip, onLogout, isInstallable, onInstall }) => {
+const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSetDefaultTrip, onLogout }) => {
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [isFrequentExpenseManagerOpen, setIsFrequentExpenseManagerOpen] = useState(false);
     const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
@@ -104,14 +103,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                         <SettingsItem icon="contrast" label="Tema Scuro">
                             <ThemeToggle />
                         </SettingsItem>
-                        {isInstallable && (
-                            <div className="p-2">
-                                <button onClick={onInstall} className="w-full flex items-center justify-center gap-3 p-3 bg-primary-container text-on-primary-container font-bold rounded-xl hover:opacity-90 transition-opacity active:scale-95">
-                                    <span className="material-symbols-outlined">download</span>
-                                    Installa App
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </section>
 

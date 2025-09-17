@@ -44,6 +44,9 @@ export interface Category {
 }
 
 export interface UserData {
+  name?: string;
+  email?: string;
+  dataviaggio?: string;
   trips: Trip[];
   categories: Category[];
   defaultTripId?: string;

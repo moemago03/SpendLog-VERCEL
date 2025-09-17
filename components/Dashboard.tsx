@@ -273,6 +273,12 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
         last3days: 'Ultimi 3 giorni',
     };
 
+    const [integerPart, decimalPart] = new Intl.NumberFormat('it-IT', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(stats.totalSpent).split(',');
+
+
     const summaryContent = (
         <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
             <div
@@ -302,32 +308,45 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                 className="p-4 space-y-6 transition-transform"
                 style={{ transform: `translateY(${pullDelta}px)` }}
             >
-                <header className="flex justify-between items-start">
-                    <h1 className="text-3xl font-bold text-on-background">{activeTrip.name}</h1>
-                    <div className="text-right">
-                        <div className="flex items-center gap-2 text-on-surface-variant">
-                             <span className="material-symbols-outlined text-lg">date_range</span>
-                             <span className="font-medium">{tripDuration} Giorni</span>
+                <div className="bg-surface p-5 rounded-[2.5rem] shadow-sm">
+                    <header className="flex justify-between items-center px-1">
+                        <button onClick={handleRefresh} className="w-11 h-11 bg-surface-variant/60 dark:bg-surface rounded-2xl flex items-center justify-center transition-transform active:scale-90" aria-label="Aggiorna dati">
+                            <span className={`material-symbols-outlined text-on-surface-variant ${isRefreshing ? 'animate-spin' : ''}`}>refresh</span>
+                        </button>
+                        <h1 className="text-lg font-semibold text-on-surface truncate px-2">{activeTrip.name}</h1>
+                        <div className="w-auto h-11 px-3 bg-surface-variant/60 dark:bg-surface rounded-2xl flex items-center justify-center shadow-sm">
+                            <div className="flex items-center gap-1.5 text-on-surface-variant">
+                                 <span className="material-symbols-outlined text-lg">date_range</span>
+                                 <span className="text-sm font-medium">{tripDuration} Giorni</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="text-center my-6">
+                        <h2 className="text-5xl lg:text-6xl font-bold tracking-tighter text-on-background">
+                            {integerPart}<span className="text-4xl lg:text-5xl opacity-80">,{decimalPart}</span>
+                        </h2>
+                        <p className="text-sm font-semibold text-on-surface-variant mt-1 tracking-widest">{activeTrip.mainCurrency}</p>
+                    </div>
+
+                    <div className="border-t border-outline/10 mt-6 pt-5">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Spesa Oggi</p>
+                                <p className="text-xl font-bold tracking-tight text-on-surface mt-1">
+                                    {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
+                                </p>
+                            </div>
+                            <div className="text-center">
+                                 <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">Budget Giorno</p>
+                                <p className="text-xl font-bold tracking-tight text-on-surface mt-1">
+                                    {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </header>
-                
-                <div className="grid grid-cols-2 gap-4 bg-surface-variant p-5 rounded-3xl">
-                    {/* Today's Spend */}
-                    <div className="text-center">
-                        <p className="text-sm font-medium text-on-surface-variant">Spesa Oggi</p>
-                        <p className="text-4xl font-bold tracking-tighter text-on-surface mt-1">
-                            {formatCurrencyInteger(todaysSpend, activeTrip.mainCurrency)}
-                        </p>
-                    </div>
-                    {/* Daily Budget */}
-                    <div className="text-center border-l border-outline/30">
-                        <p className="text-sm font-medium text-on-surface-variant">Budget Giorno</p>
-                        <p className="text-4xl font-bold tracking-tighter text-on-surface mt-1">
-                            {formatCurrencyInteger(dailyBudget, activeTrip.mainCurrency)}
-                        </p>
-                    </div>
                 </div>
+
 
                 {/* Total Budget Progress Bar */}
                 <div className="space-y-3 pt-2">

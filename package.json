@@ -1,5 +1,5 @@
 {
-  "name": "dev-v12-spendlog-vercel",
+  "name": "dev-v13-spendlog-vercel",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,7 +12,8 @@
     "react-dom": "^19.1.1",
     "react": "^19.1.1",
     "recharts": "^3.2.0",
-    "@google/genai": "^1.19.0"
+    "@google/genai": "^1.19.0",
+    "firebase": "^12.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

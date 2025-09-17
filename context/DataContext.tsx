@@ -22,7 +22,14 @@ interface DataContextProps {
 
 const DataContext = createContext<DataContextProps | undefined>(undefined);
 
-const defaultUserData: UserData = { trips: [], categories: DEFAULT_CATEGORIES, defaultTripId: undefined };
+const defaultUserData: UserData = {
+    name: '',
+    email: '',
+    dataviaggio: '',
+    trips: [],
+    categories: DEFAULT_CATEGORIES,
+    defaultTripId: undefined
+};
 
 interface DataProviderProps {
     children: ReactNode;
@@ -64,7 +71,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
             }
         } catch (error) {
             console.error("Failed to load data", error);
-            addNotification("Impossibile caricare i dati. Controlla la connessione.", 'error');
+            addNotification("Impossibile caricare i dati da Firestore. Controlla la configurazione.", 'error');
             if (!isRefetch) setData(defaultUserData);
         } finally {
             if (!isRefetch) setLoading(false);
@@ -88,8 +95,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
                     addNotification(successMessage, 'success');
                 }
             } catch (error) {
-                console.error("Failed to save data:", error);
-                addNotification('Errore di salvataggio. Le modifiche potrebbero non essere state salvate.', 'error');
+                console.error("Failed to save data to Firestore:", error);
+                addNotification('Errore di salvataggio su Firestore. Le modifiche potrebbero non essere state salvate.', 'error');
                 // Optionally revert data here
                 loadData(true); // Refetch to get last good state
             }

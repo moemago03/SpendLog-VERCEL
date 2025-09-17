@@ -1,54 +1,69 @@
-import { GOOGLE_SCRIPT_URL } from '../config';
+import { db } from '../config';
 import { UserData } from '../types';
+// FIX: Removed Firebase v9 modular imports as the codebase is being updated to use the v8 API syntax.
+// import { doc, getDoc, setDoc } from "firebase/firestore";
 
-export const fetchData = async (password: string): Promise<UserData> => {
-    if (!GOOGLE_SCRIPT_URL) {
-        const errorMsg = "Google Script URL is not configured. Please update config.ts";
-        throw new Error(errorMsg);
+/**
+ * Fetches user data from a Firestore document.
+ * @param password The user's identifier, used as the document ID.
+ * @returns The user's data or null if not found.
+ */
+export const fetchData = async (password: string): Promise<UserData | null> => {
+    if (!password) {
+        throw new Error("User identifier is required.");
     }
-    
+
     try {
-        const response = await fetch(`${GOOGLE_SCRIPT_URL}?password=${encodeURIComponent(password)}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch data from Google Sheet. Check permissions and URL.');
+        // FIX: Switched to Firebase v8 syntax to get a document reference and fetch the document.
+        const userDocRef = db.collection("users").doc(password);
+        const docSnap = await userDocRef.get();
+
+        // FIX: Switched to Firebase v8's `.exists` property instead of the v9 `.exists()` method.
+        if (docSnap.exists) {
+            const data = docSnap.data();
+            // Merge fetched data with defaults to ensure all fields are present
+            return {
+                name: '',
+                email: '',
+                dataviaggio: '',
+                trips: [],
+                categories: [],
+                ...data,
+                defaultTripId: data.defaultTripId || undefined,
+            } as UserData;
+        } else {
+            console.log("No such document for user:", password);
+            return null;
         }
-        return await response.json();
-    } catch(e) {
-        console.error("Error fetching data:", e);
-        throw e;
+    } catch (e) {
+        console.error("Error fetching data from Firestore:", e);
+        throw new Error('Failed to fetch data from Firestore. Check your configuration and permissions.');
     }
 };
 
+/**
+ * Saves user data to a Firestore document.
+ * @param password The user's identifier, used as the document ID.
+ * @param data The user data to save.
+ */
 export const saveData = async (password: string, data: UserData): Promise<void> => {
-    if (!GOOGLE_SCRIPT_URL) {
-        console.error("Google Script URL is not configured. Please update config.ts");
+    if (!password) {
+        console.error("User identifier is required for saving data.");
         return;
     }
 
     try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ password, data }),
-            headers: {
-              // This content type avoids a CORS preflight request that Apps Script doesn't handle.
-              "Content-Type": "text/plain;charset=utf-8",
-            },
-            // By removing 'mode: no-cors', we can read the response and handle errors.
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Server returned an error response' }));
-            throw new Error(errorData.error || `Failed to save data. Server responded with status ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.error || 'An unknown error occurred while saving.');
-        }
-
-    } catch(e: any) {
-        console.error("Error saving data:", e);
-        // Optionally, re-throw the error if the calling context needs to handle it
-        throw e;
+        // FIX: Switched to Firebase v8 syntax to get a document reference.
+        const userDocRef = db.collection("users").doc(password);
+        // Create a clean data object to avoid saving 'undefined' to Firestore
+        const dataToSave = {
+            ...data,
+            defaultTripId: data.defaultTripId || null // Store as null instead of undefined
+        };
+        // FIX: Switched to Firebase v8 syntax to save the document.
+        await userDocRef.set(dataToSave);
+    } catch (e: any) {
+        console.error("Error saving data to Firestore:", e);
+        throw new Error('Failed to save data. Check your Firestore configuration and network connection.');
     }
 };

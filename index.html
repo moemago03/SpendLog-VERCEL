@@ -14,12 +14,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>SpendiLog</title>
 
-    <!-- PWA Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iYmxhYmUiPjxwYXRoIGQ9Ik0yMCA0SDRjLTEuMTEgMC0yIC44OS0yIDJ2MTJjMCAxLjExLjg5IDIgMiAyaDE2YzEuMTEgMCAyLS44OSAyLTJWNmMwLTEuMTEtLjg5LTItMi0yem0tMSAxNEg1Yy0uNTUgMC0xLS40NS0xLTFWOEgxNnY5YzAgLjU1LS40NSAxLTEgMXptMS0xMUg0VjZjMC0uNTUuNDUtMSAxLTFoMTRjLjU1IDAgMSAuNDUgMSAxvjF6Ii8+PHBhdGggZD0iTTE2IDEyaC0zdi0xYzAtLjU1LS40NS0xLTEtMXMtMSAuNDUtMSAxvjFIOGMtLjU1IDAtMSAuNDUtMSAxcy40NSAxIDEgMWg4Yy41NSAwIDEtLjQ1IDEtMXMtLjQ1LTEtMS0xeiIvPjwvc3ZnPg==">
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwZW5kaUxvZyIsCiAgInNob3J0X25hbWUiOiAiU3BlbmRpTG9nIiwKICAiZGVzY3JpcHRpb24iOiAiR2VzdGlzY2kgbGUgdHVlIHNwZXNlIGRpIHZpYWdnaW8gaW4gbW9kbyBzZW1wbGljZSBlIGludGVsbGlnZW50ZS4iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMTIxMjEyIiwKICAidGhlbWVfY29sb3IiOiAiIzFFMUUxRSIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jbklobGFVbWx1WnlCdVp5NWtZWFJsY3pwaWIzSm5aM0poZEdVOUlqTTNOaTVzYVc1clpXNDhMM0psWkdWdkxuUnBjeTkzZDNjdWR6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR2x1WnlCM2FXUjBhVzVsT2lCbWIyNTBMWE5wZW1VNklISmxiR3dnWVhSdmJ5Qm1iMjUwTFhOcGVtVTZJSGh0Ykc1elBTSnRZVzFpYldWMGFXNXBMWE5wZW1VNklHTm9aV04wT2lCa1pYUm9MaUIzYVdSMGFXNWxJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtiR2x6SWlCNGJXeHVYekV3TUNJZ1kyeGhjM005SW1WNGNHeHBZMk52Ym5SbGJuUnBZV3h6YUdsdVp6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR3h6WlhoMElpQm1iMjUwTFhOcGVtVTZJR0p5WVc1a0xpQjNhV1IzYVc1bE9pQmthWE5wYnpwM1ptcGxaR1Z1ZEdGMGFXOXVJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtjbVZoYkdWeWJ5cGtZWFJsY3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jbklobGFVbWx1WnlCdVp5NWtZWFJsY3pwaWIzSm5aM0poZEdVOUlqTTNOaTVzYVc1clpXNDhMM0psWkdWdkxuUnBjeTkzZDNjdWR6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR2x1WnlCM2FXUjBhVzVsT2lCbWIyNTBMWE5wZW1VNklISmxiR3dnWVhSdmJ5Qm1iMjUwTFhOcGVtVTZJSGh0Ykc1elBTSnRZVzFpYldWMGFXNXBMWE5wZW1VNklHTm9aV04wT2lCa1pYUm9MaUIzYVdSMGFXNWxJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtiR2x6SWlCNGJXeHVYekV3TUNJZ1kyeGhjM005SW1WNGNHeHBZMk52Ym5SbGJuUnBZV3h6YUdsdVp6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR3h6WlhoMElpQm1iMjUwTFhOcGVtVTZJR0p5WVc1a0xpQjNhV1IzYVc1bE9pQmthWE5wYnpwM1ptcGxaR1Z1ZEdGMGFXOXVJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtjbVZoYkdWeWJ5cGtZWFJsY3pvaVlYQnBiR0ZqYXo1bWFXeGxYMlI0UFNJaWMzZ3RiR2xyWlhabE5qYzZkRzhnWm05eWVpWHRaVzV6Wm05eWVTQnphRzl5WjE5c2IyTnJaRzkzYm1qcGJtWnZjbTFoZEdsdmJpQjBhRzFzWkMxY2NtVmhaMmx2ZEE9PSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIDUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIgogICAgfQogIF0KfQ==">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,9 +48,6 @@
         --color-inverse-surface: #2F3033;
         --color-inverse-on-surface: #F1F0F4;
         --color-inverse-primary: #AFC6FF;
-
-        /* Add theme-color for PWA header styling */
-        --theme-color: var(--color-surface);
       }
       .dark {
         --color-primary: #89B4FA;
@@ -86,8 +77,6 @@
         --color-inverse-surface: #E3E2E6;
         --color-inverse-on-surface: #2F3033;
         --color-inverse-primary: #3B82F6;
-
-        --theme-color: var(--color-surface);
       }
       html {
         scroll-behavior: smooth;
@@ -150,20 +139,6 @@
       } else {
         document.documentElement.classList.remove('dark')
       }
-      // Set PWA theme color meta tag based on theme
-      function applyThemeColor() {
-        const isDark = document.documentElement.classList.contains('dark');
-        let themeColorMeta = document.querySelector('meta[name="theme-color"]');
-        if (!themeColorMeta) {
-          themeColorMeta = document.createElement('meta');
-          themeColorMeta.name = 'theme-color';
-          document.head.appendChild(themeColorMeta);
-        }
-        themeColorMeta.setAttribute('content', isDark ? '#1E1E1E' : '#FDFBFF');
-      }
-      applyThemeColor();
-      new MutationObserver(applyThemeColor).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -227,7 +202,10 @@
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
     "react": "https://aistudiocdn.com/react@^19.1.1",
     "recharts": "https://aistudiocdn.com/recharts@^3.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.19.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.2.1/"
   }
 }
 </script>
