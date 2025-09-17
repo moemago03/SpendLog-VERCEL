@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Trip, Expense } from '../types';
 import { useData } from '../context/DataContext';
@@ -18,13 +16,15 @@ const ExpenseItem: React.FC<{
     categoryIcon: string; 
     isSelected: boolean;
     onSelect: () => void;
-}> = ({ expense, onEdit, onDelete, categoryIcon, isSelected, onSelect }) => {
+    style?: React.CSSProperties;
+}> = ({ expense, onEdit, onDelete, categoryIcon, isSelected, onSelect, style }) => {
     const { formatCurrency, convert } = useCurrencyConverter();
     const mainCurrency = 'EUR'; // Assuming EUR as the main currency for conversion display
     
     return (
         <li 
-            className={`relative p-3 rounded-3xl cursor-pointer transition-all duration-300 overflow-hidden bg-surface-variant`}
+            className={`relative p-3 rounded-3xl cursor-pointer transition-all duration-300 overflow-hidden bg-surface-variant animate-slide-in-up`}
+            style={style}
             onClick={onSelect}
             aria-selected={isSelected}
         >
@@ -102,7 +102,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, trip, onEditExpense
             </div>
             {expenses.length > 0 ? (
                 <ul className="space-y-3">
-                    {expenses.map(expense => (
+                    {expenses.map((expense, index) => (
                         <ExpenseItem 
                             key={expense.id} 
                             expense={expense} 
@@ -111,6 +111,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, trip, onEditExpense
                             categoryIcon={getCategoryIcon(expense.category)}
                             isSelected={selectedExpenseId === expense.id}
                             onSelect={() => handleSelectExpense(expense.id)}
+                            style={{ animationDelay: `${index * 50}ms` }}
                         />
                     ))}
                 </ul>

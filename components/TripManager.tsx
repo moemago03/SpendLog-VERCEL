@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import TripForm from './TripForm';
@@ -40,7 +41,7 @@ const TripCard: React.FC<{
 
   return (
     <li className="bg-surface rounded-3xl shadow-md overflow-hidden transition-shadow hover:shadow-lg">
-      <div className="p-5">
+      <div className="p-6">
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-bold text-xl text-on-surface">{trip.name}</h3>
@@ -65,7 +66,7 @@ const TripCard: React.FC<{
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-6">
             <div className="flex justify-between items-center text-sm text-on-surface-variant mb-1">
                 <span>Speso</span>
                 <span>Rimanente</span>
@@ -124,7 +125,7 @@ const TripManager: React.FC<TripManagerProps> = ({ onClose }) => {
             
             <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 {sortedTrips.length > 0 ? (
-                    <ul className="space-y-4 max-w-2xl mx-auto">
+                    <ul className="space-y-4 max-w-2xl mx-auto pb-28">
                         {sortedTrips.map(trip => (
                             <TripCard
                                 key={trip.id}

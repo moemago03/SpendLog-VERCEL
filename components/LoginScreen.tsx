@@ -14,7 +14,7 @@ const KeypadButton: React.FC<{
 }> = ({ value, onClick, className = '', isActive }) => (
     <button
         onClick={onClick}
-        className={`flex items-center justify-center w-20 h-20 text-3xl font-light transition-transform duration-150 focus:outline-none ${isActive ? 'font-bold scale-110' : ''} ${className}`}
+        className={`flex items-center justify-center w-16 h-16 text-3xl font-light transition-transform duration-150 focus:outline-none ${isActive ? 'font-bold scale-110' : ''} ${className}`}
         aria-label={`Pulsante ${typeof value === 'string' ? value : 'icona'}`}
     >
         {value}
@@ -69,7 +69,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="h-screen overflow-hidden flex flex-col justify-between bg-gradient-to-b from-tertiary-container/30 via-surface to-primary-container/30 text-on-surface p-8">
+        <div className="h-screen w-screen overflow-hidden flex flex-col justify-center items-center gap-16 bg-gradient-to-b from-tertiary-container/30 via-surface to-primary-container/30 text-on-surface p-4">
             <style>{`
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
@@ -81,7 +81,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 }
             `}</style>
             
-            <div className="flex-grow flex flex-col justify-center items-center text-center space-y-8 pt-12">
+            <div className="text-center space-y-8">
                 <div>
                     <div className="flex justify-center items-center gap-3 mb-4">
                         <span className="material-symbols-outlined text-primary text-3xl">receipt_long</span>
@@ -93,8 +93,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 <PasscodeDots />
             </div>
 
-            <div className="flex-shrink-0 flex flex-col items-center pb-4">
-                <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+            <div className="flex-shrink-0">
+                <div className="grid grid-cols-3 gap-x-6 gap-y-4">
                     {'123456789'.split('').map(num => (
                         <KeypadButton
                             key={num}

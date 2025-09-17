@@ -103,7 +103,9 @@ const AppContent: React.FC<{
     return (
         <div className="min-h-screen bg-background text-on-background font-sans">
             <main className="pb-20">
-                 {renderMainContent()}
+                 <div key={activeView + activeTripId} className="animate-fade-in">
+                    {renderMainContent()}
+                </div>
             </main>
             <BottomNavBar 
                 activeView={activeView}
