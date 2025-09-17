@@ -24,7 +24,7 @@ const SettingsItem: React.FC<{
 }> = ({ label, icon, onClick, children, color = 'text-on-surface' }) => (
     <div 
         onClick={onClick} 
-        className={`flex justify-between items-center p-4 min-h-[64px] ${onClick ? 'cursor-pointer hover:bg-on-surface/5 transition-colors' : ''}`}
+        className={`flex justify-between items-center p-4 min-h-[64px] ${onClick ? 'cursor-pointer hover:bg-on-surface/5 active:bg-on-surface/10 transition-colors' : ''}`}
     >
         <div className="flex items-center gap-4">
             <span className={`material-symbols-outlined ${color === 'text-on-surface' ? 'text-on-surface-variant' : color}`}>{icon}</span>
@@ -59,7 +59,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                         <span className="material-symbols-outlined text-6xl text-on-surface-variant/50">luggage</span>
                         <h2 className="text-2xl font-semibold text-on-surface mt-4">Nessun viaggio trovato</h2>
                         <p className="mt-2 text-on-surface-variant max-w-xs mx-auto">Crea il tuo primo viaggio per iniziare a tracciare le tue avventure.</p>
-                        <button onClick={() => setIsTripManagerOpen(true)} className="mt-8 px-8 py-3 bg-primary text-on-primary font-bold rounded-full shadow-md hover:shadow-lg transition-all transform hover:scale-105">
+                        <button onClick={() => setIsTripManagerOpen(true)} className="mt-8 px-8 py-3 bg-trip-primary text-trip-on-primary font-bold rounded-full shadow-md hover:shadow-lg transition-all transform active:scale-95">
                             Crea un Viaggio
                         </button>
                     </div>
@@ -71,7 +71,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                                 id="trip-select"
                                 value={activeTripId || 'none'}
                                 onChange={(e) => onSetDefaultTrip(e.target.value)}
-                                className="w-full bg-surface-variant border-2 border-transparent text-on-surface font-semibold text-lg rounded-2xl py-4 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full bg-surface-variant border-2 border-transparent text-on-surface font-semibold text-lg rounded-2xl py-4 px-4 appearance-none focus:outline-none focus:ring-2 focus:ring-trip-primary"
                             >
                                 <option value="none">Nessun viaggio predefinito</option>
                                 {sortedTrips.map(trip => (
@@ -104,7 +104,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                         </SettingsItem>
                         {isInstallable && (
                             <div className="p-2">
-                                <button onClick={onInstall} className="w-full flex items-center justify-center gap-3 p-3 bg-primary-container text-on-primary-container font-bold rounded-xl hover:opacity-90 transition-opacity">
+                                <button onClick={onInstall} className="w-full flex items-center justify-center gap-3 p-3 bg-primary-container text-on-primary-container font-bold rounded-xl hover:opacity-90 transition-opacity active:scale-95">
                                     <span className="material-symbols-outlined">download</span>
                                     Installa App
                                 </button>

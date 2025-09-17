@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 import { Expense } from '../types';
@@ -7,7 +7,7 @@ import ExpenseList from './ExpenseList';
 import CurrencyConverter from './CurrencyConverter';
 import CategoryBudgetTracker from './CategoryBudgetTracker';
 import AIPanel from './AIPanel';
-import Statistics from './Statistics';
+const Statistics = lazy(() => import('./Statistics'));
 
 interface DashboardProps {
     activeTripId: string;
@@ -27,6 +27,35 @@ const useOutsideClick = (ref: React.RefObject<HTMLDivElement>, callback: () => v
         };
     }, [ref, callback]);
 };
+
+const triggerHapticFeedback = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+};
+
+const StatisticsSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        {/* Mimic SpendingDonutChart and filter buttons */}
+        <div className="bg-surface-variant/50 p-4 rounded-3xl">
+            <div className="w-full h-56 relative flex flex-col items-center justify-center">
+                <div className="w-36 h-36 bg-surface rounded-full"></div>
+            </div>
+            <div className="flex justify-center items-center gap-2 p-1 mt-4 bg-surface rounded-full">
+                <div className="h-10 flex-1 bg-secondary-container/20 rounded-full"></div>
+                <div className="h-10 flex-1 bg-secondary-container/20 rounded-full"></div>
+                <div className="h-10 flex-1 bg-secondary-container/20 rounded-full"></div>
+                <div className="h-10 flex-1 bg-secondary-container/20 rounded-full"></div>
+            </div>
+        </div>
+        {/* Mimic GroupedSpendingList */}
+        <div className="bg-surface-variant/50 p-4 rounded-3xl space-y-2">
+            <div className="h-8 w-1/3 bg-surface rounded-lg"></div>
+            <div className="h-16 bg-surface rounded-lg mt-4"></div>
+            <div className="h-16 bg-surface rounded-lg"></div>
+            <div className="h-16 bg-surface rounded-lg"></div>
+        </div>
+    </div>
+);
+
 
 const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     const { data } = useData();
@@ -139,10 +168,16 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     };
 
     const handleAddExpense = () => {
+        triggerHapticFeedback();
         setEditingExpense(undefined);
         setIsExpenseFormOpen(true);
     };
     
+    const handleAIPanelOpen = () => {
+        triggerHapticFeedback();
+        setIsAIPanelOpen(true);
+    };
+
     const handleFilterChange = (filter: TimeFilter) => {
         setTimeFilter(filter);
         setIsFilterOpen(false);
@@ -203,8 +238,8 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
                             className="h-2.5 rounded-full" 
                             style={{ 
                                 width: `${spentPercentage}%`, 
-                                backgroundColor: isOverBudget ? 'var(--color-error)' : 'var(--color-primary)', 
-                                transition: 'width 0.5s ease-out' 
+                                backgroundColor: isOverBudget ? 'var(--color-error)' : 'var(--trip-primary, var(--color-primary))', 
+                                transition: 'width 0.5s ease-out, background-color 0.3s ease-out' 
                             }}>
                         </div>
                     </div>
@@ -248,7 +283,9 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
             <header>
                 <h1 className="text-3xl font-bold text-on-background">Statistiche: {activeTrip.name}</h1>
             </header>
-            <Statistics trip={activeTrip} expenses={sortedExpenses} />
+            <Suspense fallback={<StatisticsSkeleton />}>
+                <Statistics trip={activeTrip} expenses={sortedExpenses} />
+            </Suspense>
         </div>
     );
     
@@ -264,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
     return (
         <div className="relative min-h-screen">
             {/* Scrollable content with animation */}
-            <div className="animate-fade-in">
+            <div>
                 {currentView === 'summary' && summaryContent}
                 {currentView === 'stats' && statsContent}
                 {currentView === 'currency' && currencyContent}
@@ -273,15 +310,15 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTripId, currentView }) => {
             {/* Fixed Action Buttons */}
             <div className="fixed bottom-20 right-4 flex flex-col items-center gap-3 z-20">
                  <button 
-                    onClick={() => setIsAIPanelOpen(true)}
-                    className="h-10 w-10 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                    onClick={handleAIPanelOpen}
+                    className="h-10 w-10 bg-secondary-container text-on-secondary-container rounded-full shadow-lg flex items-center justify-center transition-transform active:scale-90"
                     aria-label="Assistente AI"
                 >
                     <span className="material-symbols-outlined text-lg">auto_awesome</span>
                 </button>
                 <button 
                     onClick={handleAddExpense}
-                    className="h-12 w-12 bg-primary text-on-primary rounded-2xl shadow-lg flex items-center justify-center transition-transform hover:scale-110"
+                    className="h-12 w-12 bg-trip-primary text-trip-on-primary rounded-2xl shadow-lg flex items-center justify-center transition-transform active:scale-90"
                     aria-label="Aggiungi spesa"
                 >
                     <span className="material-symbols-outlined text-xl">add</span>

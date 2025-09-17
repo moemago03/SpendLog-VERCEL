@@ -6,6 +6,10 @@ import TripForm from './TripForm';
 import { Trip } from '../types';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
+const triggerHapticFeedback = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+};
+
 interface TripManagerProps {
     onClose: () => void;
 }
@@ -48,7 +52,7 @@ const TripCard: React.FC<{
             <p className="text-sm text-on-surface-variant mt-1">{trip.countries.join(', ')}</p>
           </div>
           <div className="relative" ref={menuRef}>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-full text-on-surface-variant hover:bg-on-surface/10">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-full text-on-surface-variant hover:bg-on-surface/10 active:scale-90 transition-transform">
               <span className="material-symbols-outlined">more_vert</span>
             </button>
             {isMenuOpen && (
@@ -73,8 +77,11 @@ const TripCard: React.FC<{
             </div>
             <div className="w-full bg-surface-variant rounded-full h-2.5">
                 <div 
-                    className="bg-primary h-2.5 rounded-full transition-all duration-500" 
-                    style={{ width: `${Math.min(spentPercentage, 100)}%` }}
+                    className="h-2.5 rounded-full transition-all duration-500" 
+                    style={{ 
+                        width: `${Math.min(spentPercentage, 100)}%`,
+                        backgroundColor: trip.color || 'var(--color-primary)'
+                    }}
                 />
             </div>
             <div className="flex justify-between items-center text-sm font-semibold text-on-surface mt-1">
@@ -99,6 +106,7 @@ const TripManager: React.FC<TripManagerProps> = ({ onClose }) => {
     }, [data?.trips]);
 
     const openNewTripForm = () => {
+        triggerHapticFeedback();
         setEditingTrip(null);
         setIsFormOpen(true);
     };
@@ -144,7 +152,7 @@ const TripManager: React.FC<TripManagerProps> = ({ onClose }) => {
                         <p className="mt-2 text-on-surface-variant max-w-sm">Crea il tuo primo viaggio per iniziare a tracciare le tue avventure e le tue spese.</p>
                         <button 
                             onClick={openNewTripForm}
-                            className="mt-8 px-6 py-3 bg-primary text-on-primary font-semibold rounded-full shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                            className="mt-8 px-6 py-3 bg-primary text-on-primary font-semibold rounded-full shadow-md hover:shadow-lg transition-all transform active:scale-95"
                         >
                             Crea il Tuo Primo Viaggio
                         </button>
@@ -155,7 +163,7 @@ const TripManager: React.FC<TripManagerProps> = ({ onClose }) => {
             {sortedTrips.length > 0 && (
                 <button
                     onClick={openNewTripForm}
-                    className="fixed bottom-8 right-6 h-16 w-16 bg-primary text-on-primary rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center z-30"
+                    className="fixed bottom-8 right-6 h-16 w-16 bg-trip-primary text-trip-on-primary rounded-2xl shadow-lg hover:shadow-xl transition-transform active:scale-90 z-30"
                     aria-label="Aggiungi nuovo viaggio"
                 >
                     <span className="material-symbols-outlined text-3xl">add</span>

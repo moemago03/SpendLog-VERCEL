@@ -3,6 +3,10 @@ import { useData } from '../context/DataContext';
 import { Trip, Expense, FrequentExpense } from '../types';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
 
+const triggerHapticFeedback = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+};
+
 // FIX: Timezone Bug Fix. This function generates a 'YYYY-MM-DD' string
 // based on the user's local date, not UTC.
 const getLocalDateString = () => {
@@ -33,6 +37,7 @@ const ExpenseForm: React.FC<{
     }, []);
 
     const handleFrequentExpenseClick = (freqExp: FrequentExpense) => {
+        triggerHapticFeedback();
         setAmount(freqExp.amount.toString());
         setCategory(freqExp.category);
         setCurrency(trip.mainCurrency);
@@ -40,6 +45,7 @@ const ExpenseForm: React.FC<{
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        triggerHapticFeedback();
         const numericAmount = parseFloat(amount);
         if (!numericAmount || numericAmount <= 0 || !category || !date) {
             alert("Per favore, compila tutti i campi correttamente.");
@@ -130,7 +136,7 @@ const ExpenseForm: React.FC<{
                                 key={freqExp.id}
                                 type="button"
                                 onClick={() => handleFrequentExpenseClick(freqExp)}
-                                className="flex items-center gap-2 py-2 px-3 rounded-full text-left bg-surface-variant hover:bg-primary-container transition-colors focus:outline-none focus:ring-2 focus:ring-primary flex-shrink-0"
+                                className="flex items-center gap-2 py-2 px-3 rounded-full text-left bg-surface-variant hover:bg-primary-container transition-colors focus:outline-none focus:ring-2 focus:ring-trip-primary flex-shrink-0 active:scale-95"
                                 aria-label={`Aggiungi spesa rapida: ${freqExp.name}`}
                             >
                                 <span className="text-xl" aria-hidden="true">{freqExp.icon}</span>
@@ -208,7 +214,7 @@ const ExpenseForm: React.FC<{
             <footer className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t border-surface-variant flex-shrink-0">
                 <button
                     onClick={handleSubmit}
-                    className="w-full bg-primary text-on-primary font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow"
+                    className="w-full bg-trip-primary text-trip-on-primary font-bold py-4 rounded-2xl shadow-md hover:shadow-lg transition-shadow active:scale-[0.98]"
                 >
                     {expense?.id ? 'Salva Modifiche' : 'Salva Spesa'}
                 </button>

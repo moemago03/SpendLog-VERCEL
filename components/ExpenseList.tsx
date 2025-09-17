@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Trip, Expense } from '../types';
 import { useData } from '../context/DataContext';
 import { useCurrencyConverter } from '../hooks/useCurrencyConverter';
@@ -21,11 +21,50 @@ const ExpenseItem: React.FC<{
     const { formatCurrency, convert } = useCurrencyConverter();
     const mainCurrency = 'EUR'; // Assuming EUR as the main currency for conversion display
     
+    const touchStartX = useRef(0);
+    const isSwiping = useRef(false);
+
+    const handleTouchStart = (e: React.TouchEvent<HTMLLIElement>) => {
+        touchStartX.current = e.targetTouches[0].clientX;
+        isSwiping.current = false;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLLIElement>) => {
+        if (Math.abs(e.targetTouches[0].clientX - touchStartX.current) > 10) {
+            isSwiping.current = true;
+        }
+    };
+    
+    const handleTouchEnd = (e: React.TouchEvent<HTMLLIElement>) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const deltaX = touchEndX - touchStartX.current;
+        const swipeThreshold = 50; // Min distance for a swipe
+
+        if (Math.abs(deltaX) > swipeThreshold) {
+            // It's a swipe
+            if (deltaX < 0 && !isSelected) { // Swipe Left to Open
+                onSelect();
+            } else if (deltaX > 0 && isSelected) { // Swipe Right to Close
+                onSelect();
+            }
+        }
+    };
+
+    const handleClick = () => {
+        // Only trigger onSelect if it was a tap, not a swipe
+        if (!isSwiping.current) {
+            onSelect();
+        }
+    };
+    
     return (
         <li 
             className={`relative p-3 rounded-3xl cursor-pointer transition-all duration-300 overflow-hidden bg-surface-variant animate-slide-in-up`}
             style={style}
-            onClick={onSelect}
+            onClick={handleClick}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             aria-selected={isSelected}
         >
             {/* Main content area */}
@@ -111,9 +150,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, trip, onEditExpense
                     ))}
                 </ul>
             ) : (
-                <div className="text-center py-10 px-4 bg-surface-variant rounded-3xl">
-                    <p className="text-on-surface-variant">Nessuna spesa trovata.</p>
-                    <p className="text-sm text-on-surface-variant/80">Aggiungine una con il pulsante `+`!</p>
+                <div className="text-center py-12 px-4 bg-surface-variant rounded-3xl flex flex-col items-center justify-center">
+                    <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">receipt_long</span>
+                    <p className="font-semibold text-on-surface-variant">Nessuna spesa trovata per questo periodo.</p>
+                    <p className="text-sm text-on-surface-variant/80 mt-1">Aggiungi una nuova spesa usando il pulsante `+`!</p>
                 </div>
             )}
         </div>

@@ -17,13 +17,14 @@
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iYmxhY2siPjxwYXRoIGQ9Ik0yMCA0SDRjLTEuMTEgMC0yIC44OS0yIDJ2MTJjMCAxLjExLjg5IDIgMiAyaDE2YzEuMTEgMCAyLS44OSAyLTJWNmMwLTEuMTEtLjg5LTItMi0yem0tMSAxNEg1Yy0uNTUgMC0xLS40NS0xLTFWOEgxNnY5YzAgLjU1LS40NSAxLTEgMXptMS0xMUg0VjZjMC0uNTUuNDUtMSAxLTFoMTRjLjU1IDAgMSAuNDUgMSAxvjF6Ii8+PHBhdGggZD0iTTE2IDEyaC0zdi0xYzAtLjU1LS40NS0xLTEtMXMtMSAuNDUtMSAxvjFIOGMtLjU1IDAtMSAuNDUtMSAxcy40NSAxIDEgMWg4Yy41NSAwIDEtLjQ1IDEtMXMtLjQ1LTEtMS0xeiIvPjwvc3ZnPg==">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iYmxhYmUiPjxwYXRoIGQ9Ik0yMCA0SDRjLTEuMTEgMC0yIC44OS0yIDJ2MTJjMCAxLjExLjg5IDIgMiAyaDE2YzEuMTEgMCAyLS44OSAyLTJWNmMwLTEuMTEtLjg5LTItMi0yem0tMSAxNEg1Yy0uNTUgMC0xLS40NS0xLTFWOEgxNnY5YzAgLjU1LS40NSAxLTEgMXptMS0xMUg0VjZjMC0uNTUuNDUtMSAxLTFoMTRjLjU1IDAgMSAuNDUgMSAxvjF6Ii8+PHBhdGggZD0iTTE2IDEyaC0zdi0xYzAtLjU1LS40NS0xLTEtMXMtMSAuNDUtMSAxvjFIOGMtLjU1IDAtMSAuNDUtMSAxcy40NSAxIDEgMWg4Yy41NSAwIDEtLjQ1IDEtMXMtLjQ1LTEtMS0xeiIvPjwvc3ZnPg==">
     <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIlNwZW5kaUxvZyIsCiAgInNob3J0X25hbWUiOiAiU3BlbmRpTG9nIiwKICAiZGVzY3JpcHRpb24iOiAiR2VzdGlzY2kgbGUgdHVlIHNwZXNlIGRpIHZpYWdnaW8gaW4gbW9kbyBzZW1wbGljZSBlIGludGVsbGlnZW50ZS4iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMTIxMjEyIiwKICAidGhlbWVfY29sb3IiOiAiIzFFMUUxRSIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jbklobGFVbWx1WnlCdVp5NWtZWFJsY3pwaWIzSm5aM0poZEdVOUlqTTNOaTVzYVc1clpXNDhMM0psWkdWdkxuUnBjeTkzZDNjdWR6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR2x1WnlCM2FXUjBhVzVsT2lCbWIyNTBMWE5wZW1VNklISmxiR3dnWVhSdmJ5Qm1iMjUwTFhOcGVtVTZJSGh0Ykc1elBTSnRZVzFpYldWMGFXNXBMWE5wZW1VNklHTm9aV04wT2lCa1pYUm9MaUIzYVdSMGFXNWxJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtiR2x6SWlCNGJXeHVYekV3TUNJZ1kyeGhjM005SW1WNGNHeHBZMk52Ym5SbGJuUnBZV3h6YUdsdVp6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR3h6WlhoMElpQm1iMjUwTFhOcGVtVTZJR0p5WVc1a0xpQjNhV1IzYVc1bE9pQmthWE5wYnpwM1ptcGxaR1Z1ZEdGMGFXOXVJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtjbVZoYkdWeWJ5cGtZWFJsY3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jbklobGFVbWx1WnlCdVp5NWtZWFJsY3pwaWIzSm5aM0poZEdVOUlqTTNOaTVzYVc1clpXNDhMM0psWkdWdkxuUnBjeTkzZDNjdWR6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR2x1WnlCM2FXUjBhVzVsT2lCbWIyNTBMWE5wZW1VNklISmxiR3dnWVhSdmJ5Qm1iMjUwTFhOcGVtVTZJSGh0Ykc1elBTSnRZVzFpYldWMGFXNXBMWE5wZW1VNklHTm9aV04wT2lCa1pYUm9MaUIzYVdSMGFXNWxJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtiR2x6SWlCNGJXeHVYekV3TUNJZ1kyeGhjM005SW1WNGNHeHBZMk52Ym5SbGJuUnBZV3h6YUdsdVp6cHViMlJsYzNSbGNsOXBiR1U5SWpRd01DSWdZMnhoYzNNOUltVjRjR3h6WlhoMElpQm1iMjUwTFhOcGVtVTZJR0p5WVc1a0xpQjNhV1IzYVc1bE9pQmthWE5wYnpwM1ptcGxaR1Z1ZEdGMGFXOXVJaUIwWlhoMElpQjNhV1IzYVc1bE9pQmtjbVZoYkdWeWJ5cGtZWFJsY3pvaVlYQnBiR0ZqYXo1bWFXeGxYMlI0UFNJaWMzZ3RiR2xyWlhabE5qYzZkRzhnWm05eWVpWHRaVzV6Wm05eWVTQnphRzl5WjE5c2IyTnJaRzkzYm1qcGJtWnZjbTFoZEdsdmJpQjBhRzFzWkMxY2NtVmhaMmx2ZEE9PSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIDUxMng1MTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIgogICAgfQogIF0KfQ==">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
+    <style id="dynamic-trip-theme"></style>
     <style>
       :root {
         --color-primary: #3B82F6;
@@ -105,12 +106,27 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
+      @keyframes viewFadeIn {
+        from { opacity: 0.8; transform: scale(0.98); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes press {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.92); }
+        100% { transform: scale(1); }
+      }
       .animate-fade-in {
         animation: fadeIn 0.4s ease-out forwards;
       }
       .animate-slide-in-up {
         animation: slideInUp 0.5s ease-out forwards;
         opacity: 0;
+      }
+      .animate-view-transition {
+        animation: viewFadeIn 0.25s ease-out forwards;
+      }
+      .animate-press {
+        animation: press 0.2s ease-out;
       }
     </style>
     <script>
@@ -145,6 +161,8 @@
           },
           extend: {
             colors: {
+              'trip-primary': 'var(--trip-primary, var(--color-primary))',
+              'trip-on-primary': 'var(--trip-on-primary, var(--color-on-primary))',
               'primary': 'var(--color-primary)',
               'on-primary': 'var(--color-on-primary)',
               'primary-container': 'var(--color-primary-container)',

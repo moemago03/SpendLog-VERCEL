@@ -41,6 +41,41 @@ const AppContent: React.FC<{
         }
     }, [data, loading]); // Dependencies ensure this runs once after data is loaded.
 
+    const activeTrip = data?.trips.find(t => t.id === activeTripId) || null;
+
+    useEffect(() => {
+        const styleElement = document.getElementById('dynamic-trip-theme');
+        if (!styleElement) return;
+
+        if (activeTrip && activeTrip.color) {
+            const isColorLight = (hex: string) => {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                return yiq >= 128;
+            };
+
+            const primaryColor = activeTrip.color;
+            const onPrimaryColor = isColorLight(primaryColor) ? '#001A40' : '#FFFFFF';
+
+            styleElement.innerHTML = `
+                :root {
+                    --trip-primary: ${primaryColor};
+                    --trip-on-primary: ${onPrimaryColor};
+                }
+            `;
+        } else {
+            // Reset to default theme colors when no trip is active or trip has no color
+            styleElement.innerHTML = `
+                :root {
+                    --trip-primary: var(--color-primary);
+                    --trip-on-primary: var(--color-on-primary);
+                }
+            `;
+        }
+    }, [activeTrip]);
+
 
     const handleSetDefaultTrip = (tripId: string) => {
         const newDefaultTripId = tripId === 'none' ? null : tripId;
@@ -63,8 +98,6 @@ const AppContent: React.FC<{
         return <LoadingScreen />;
     }
     
-    const activeTrip = data.trips.find(t => t.id === activeTripId) || null;
-
     const renderMainContent = () => {
         if (activeView === 'profile') {
              return (
@@ -109,7 +142,7 @@ const AppContent: React.FC<{
     return (
         <div className="min-h-screen bg-background text-on-background font-sans">
             <main className="pb-20">
-                 <div key={activeView + activeTripId}>
+                 <div key={activeView + activeTripId} className="animate-view-transition">
                     {renderMainContent()}
                 </div>
             </main>

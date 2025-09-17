@@ -6,15 +6,21 @@ interface LoginScreenProps {
 
 const PASSCODE_LENGTH = 4; // Acts as max length now
 
+const triggerHapticFeedback = () => {
+    if (navigator.vibrate) {
+        navigator.vibrate(10); // A light, quick vibration
+    }
+};
+
 const KeypadButton: React.FC<{
     value: string | React.ReactNode;
     onClick: () => void;
     className?: string;
-    isActive: boolean; // New prop for animation
+    isActive: boolean; // Prop for animation
 }> = ({ value, onClick, className = '', isActive }) => (
     <button
         onClick={onClick}
-        className={`flex items-center justify-center w-16 h-16 text-3xl font-light transition-transform duration-150 focus:outline-none ${isActive ? 'font-bold scale-110' : ''} ${className}`}
+        className={`flex items-center justify-center w-16 h-16 text-3xl font-light transition-transform duration-150 focus:outline-none active:scale-90 ${isActive ? 'font-bold scale-110' : ''} ${className}`}
         aria-label={`Pulsante ${typeof value === 'string' ? value : 'icona'}`}
     >
         {value}
@@ -27,6 +33,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     const [activeKey, setActiveKey] = useState<string | null>(null); // State for animation
 
     const handleKeyPress = (key: string) => {
+        triggerHapticFeedback();
         setActiveKey(key);
         setTimeout(() => setActiveKey(null), 150);
     };
@@ -106,7 +113,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     <KeypadButton
                         value={<span className="material-symbols-outlined select-none">backspace</span>}
                         onClick={handleBackspace}
-                        className="text-primary"
+                        className="text-trip-primary"
                         isActive={activeKey === 'backspace'}
                     />
                     <KeypadButton
@@ -117,7 +124,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     <KeypadButton
                         value={<span className="material-symbols-outlined select-none">arrow_forward</span>}
                         onClick={handleSubmit}
-                        className="text-primary"
+                        className="text-trip-primary"
                         isActive={activeKey === 'submit'}
                     />
                 </div>
