@@ -29,7 +29,6 @@ const defaultUserData: UserData = {
     dataviaggio: '',
     trips: [],
     categories: DEFAULT_CATEGORIES,
-    defaultTripId: undefined
 };
 
 interface DataProviderProps {
@@ -177,7 +176,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
 
     const setDefaultTrip = useCallback((tripId: string | null) => {
         if (!data) return;
-        const newData = { ...data, defaultTripId: tripId || undefined };
+        const newData: UserData = { ...data };
+        if (tripId) {
+            newData.defaultTripId = tripId;
+        } else {
+            delete newData.defaultTripId;
+        }
         saveData(newData, 'Viaggio predefinito impostato.');
     }, [data, saveData]);
 
@@ -206,12 +210,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children, user }) =>
         if (!data) return;
         const updatedTrips = data.trips.filter(t => t.id !== tripId);
         
-        let newDefaultTripId = data.defaultTripId;
+        const newData: UserData = { ...data, trips: updatedTrips };
         if (data.defaultTripId === tripId) {
-            newDefaultTripId = undefined;
+            delete newData.defaultTripId;
         }
 
-        const newData = { ...data, trips: updatedTrips, defaultTripId: newDefaultTripId };
         saveData(newData, 'Viaggio eliminato.');
     }, [data, saveData]);
     
