@@ -113,6 +113,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ trips, activeTripId, onSe
                         <SettingsItem icon="logout" label="Logout" onClick={onLogout} color="text-error" />
                     </div>
                 </section>
+
+                <div className="text-center text-sm text-on-surface-variant/60 pt-8">
+                    SpendiLog v18.0.1
+                </div>
             </div>
             
             {isTripManagerOpen && (
